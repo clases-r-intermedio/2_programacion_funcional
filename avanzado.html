@@ -18,7 +18,7 @@ class: center, middle
 
 &lt;img src="imagenes/logo_portada2.png" width="200" /&gt;
 
-## Capacitación en R avanzado
+## Capacitación en R intermedio
 
 ## Proyecto Estratégico Servicios Compartidos para la Producción Estadística
 
@@ -256,7 +256,7 @@ mtcars2 &lt;- mtcars %&gt;%
 ```
 
 .center[
-### En las próximas láminas haremos un repaso de funciones
+### Nota: ¡En las próximas láminas haremos un repaso de funciones!
 ]
 
 --
@@ -370,6 +370,7 @@ background-size: contain;
 background-position: 100% 0%
 
 # Repaso de funciones
+
 
 ### *Scope* de una función
 
@@ -610,7 +611,6 @@ sumar_xyz(1, 2)
 ## Error in sumar_xyz(1, 2): el argumento "z" está ausente, sin valor por omisión
 ```
 
-
 ---
 
 background-image: url("imagenes/fondo2.PNG")
@@ -632,9 +632,224 @@ print(sumar_xyz(1, 2))
 
 ```
 ## Error in py_call_impl(callable, dots$args, dots$keywords): TypeError: sumar_xyz() missing 1 required positional argument: 'z'
+## 
+## Detailed traceback:
+##   File "&lt;string&gt;", line 1, in &lt;module&gt;
 ```
 
 ### `python` utiliza *call by value* (CBV)
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Argumentos por defecto
+
+### En algunos casos vale la pena incluir argumentos por defecto
+
+
+```r
+sumar_xyz &lt;- function(x, y, z = 5) {
+  x + y + z
+}
+sumar_xyz(1, 2)
+```
+
+```
+## [1] 8
+```
+--
+
+### Si explicitamos un valor para *z*, la función se evalúa en dicho valor
+
+
+```r
+sumar_xyz(1, 2, 0.4)
+```
+
+```
+## [1] 3.4
+```
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Comentario al margen sobre funciones infix
+
+### En `R` los operadores suma, resta, multiplicación, etc son un tipo especial de función llamada *infix*
+
+
+```r
+3 + 2
+3 * 2
+```
+
+--
+
+### Las podemos escribir en su forma *prefix* 
+
+
+```r
+`+`(3, 2)
+```
+
+```
+## [1] 5
+```
+
+```r
+`*`(3, 2)
+```
+
+```
+## [1] 6
+```
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Comentario al margen sobre funciones infix
+
+
+### En algunos lenguajes de programación, como python, estos operadores tienen características muy útiles
+
+
+```python
+"perro" + " gato"
+```
+
+```
+## 'perro gato'
+```
+
+
+```python
+3 * " perro"
+```
+
+```
+## ' perro perro perro'
+```
+
+--
+
+### Podemos cambiar el comportamiento de estas funciones a nuestra conveniencia 
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Comentario al margen sobre funciones infix
+
+### Vamos a definir que "+" concatene strings
+
+--
+
+
+```r
+`+` &lt;- function(x, y) {
+  paste(x , y)
+}
+"perro" + "gato"
+```
+
+```
+## [1] "perro gato"
+```
+
+### Ahora "+" concatena strings 😀😀
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Comentario al margen sobre funciones infix
+
+### El problema es que hemos perdido la funcionalidad más importante de "+" 😞
+
+
+
+```r
+3 + 2
+```
+
+```
+## [1] "3 2"
+```
+--
+
+### ¿Y qué tal si restringimos el ámbito de acción de +?
+
+.center[
+&lt;img src="https://media.giphy.com/media/UP9ItQNj52DsM3e29m/giphy.gif" width="200" /&gt;
+]
+
+
+
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Comentario al margen sobre funciones infix
+
+### En general, no es buena idea redefinir este tipo de operadores en el ambiente global
+
+### Pero podemos crear ambientes nuevos en los que este comportamiento sea útil
+
+--
+
+
+```r
+ambiente_esoterico &lt;- env()
+
+ambiente_esoterico$`+` &lt;- function(x, y) {
+  paste(x , y)
+}
+
+eval_tidy(expr("un" + "saludo"), env =  ambiente_esoterico  )
+```
+
+```
+## [1] "un saludo"
+```
+
+--
+
+### Fuera de nuestro ambiente, el operador sigue funcionando normalmente
+
+
+```r
+"un" + "saludo"
+```
+
+```
+## Error in "un" + "saludo": argumento no-numérico para operador binario
+```
+
+--
+
+### Esto es una herramienta poderosa para desarrollar paquetes o aplicaciones
+
 
 
 ---
@@ -675,7 +890,7 @@ randomise(mean)
 ```
 
 ```
-## [1] 0.5632679
+## [1] 0.4345167
 ```
 
 ```r
@@ -683,7 +898,7 @@ randomise(sum)
 ```
 
 ```
-## [1] 5.40212
+## [1] 5.962768
 ```
 
 ```r
@@ -691,7 +906,7 @@ randomise(median)
 ```
 
 ```
-## [1] 0.4867065
+## [1] 0.342984
 ```
 
 
@@ -799,7 +1014,7 @@ background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Ventajas de `purrr`
+# Ventajas de purrr
 
 Permite abstraernos de lo que hace la función
 
@@ -933,42 +1148,6 @@ El parámetro que varía va a la izquierda y el parámetro fijo a la derecha
 
 
 ---
-background-image: url("imagenes/fondo2.PNG")
-background-size: contain;
-background-position: 100% 0%
-
-# Flujo de trabajo con purrr
-
-### Separamos el dataset usando `year`
-
-
-```r
-library(gapminder)
-gapminder_years &lt;- gapminder %&gt;% 
-  split(gapminder$year)
-```
-
---
-
-### Estimar un modelo para cada año
-
-
-
-```r
-gapminder_years %&gt;% 
-  map(~lm(lifeExp ~ gdpPercap, data = .x)) %&gt;% # estimar modelo 
-  map(coef) %&gt;% # extraer coeficientes
-  map_dbl(2) # extraer el segundo elemento 
-```
-
-```
-##         1952         1957         1962         1967         1972         1977 
-## 0.0003646691 0.0003764248 0.0005348708 0.0006950551 0.0004929443 0.0008322108 
-##         1982         1987         1992         1997         2002         2007 
-## 0.0010065630 0.0009551094 0.0008760226 0.0007996589 0.0007506730 0.0006371341
-```
-
----
 
 background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
@@ -1055,7 +1234,7 @@ background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Remover *side-effects* 
+# Trabajar con *side-effects* 
 
 ### A veces, nos interesa una función por sus *side-effects*
 
@@ -1083,7 +1262,7 @@ map(animales, print)
 ```
 --
 
-### `map` está creando una lista y, además, se imprimiendo los valores
+### `map` está creando una lista y, además, está imprimiendo los valores
 
 ---
 
@@ -1091,11 +1270,11 @@ background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Usando `walk`
+# Usando walk
 
 
 .center[
-&lt;img src="https://www.musicme.cl/wp-content/uploads/2021/07/ab67616d0000b273347c0a40c1e3f0c890a6d9d6.jpg" width="300" /&gt;
+&lt;img src="imagenes/walk.jpg" width="350" /&gt;
 ]
 
 --
@@ -1121,6 +1300,9 @@ background-position: 100% 0%
 # Usando `walk`
 
 ### Necesito escribir archivos  
+
+
+
 
 
 ```r
@@ -1149,7 +1331,7 @@ background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Introducción a la programación
+# Introducción a la programación con dplyr
 
 ### ¿Han intentado programar una función usando dplyr?
 
@@ -1172,10 +1354,9 @@ calcular_cosas(gapminder, pop)
 ```
 
 ```
-## Error in `summarise()`:
-## ! Problem while computing `min = min(var)`.
-## Caused by error:
-## ! objeto 'pop' no encontrado
+## Error: Problem with `summarise()` input `min`.
+## x objeto 'pop' no encontrado
+## i Input `min` is `min(var)`.
 ```
 
 
@@ -1190,7 +1371,7 @@ background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Introducción a la programación
+# Introducción a la programación con dplyr
 
 ### Cambiemos un par de cosas
 
@@ -1390,7 +1571,11 @@ background-position: 100% 0%
 
 ### ¿Qué significa esto `min(!!enquo_var)` ?
 
+
+.center[
 &lt;img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" /&gt;
+]
+
 
 --
 
@@ -1408,7 +1593,6 @@ calcular_cosas &lt;- function(data, var) {
   data %&gt;% 
 *   summarise(min = min(!!enquo_var))
 }
-
 calcular_cosas(gapminder, pop)
 ```
 
@@ -1419,7 +1603,6 @@ calcular_cosas(gapminder, pop)
 ## 1 60011
 ```
 
-
 ### Estamos evaluando la variable enquo_var
 
 ---
@@ -1427,7 +1610,7 @@ background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Usar el código del usario 
+# Usar el código del usuario 
 
 ### ¿Qué pasa si queremos una función que use el nombre de un parámetro, para nombrar una variable?
 
@@ -1454,7 +1637,7 @@ calcular_cosas(gapminder, pop)
 
 --
 
-### `R` fue demasiado literal
+### `R` fue demasiado literal. Usó el nombre "var"
 
 ---
 
@@ -1462,7 +1645,7 @@ background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Usar el código del usario 
+# Usar el código del usuario 
 
 ### Idea número 2
 
@@ -1584,156 +1767,23 @@ calcular_cosas(gapminder, pop)
 ## 1 60011
 ```
 
-### Nos evita dar una vuelta larga, pero no habríamos aprendido sobre evaluaciones no estándar 🤓
+--
 
+### Este operador nos hubiera evitado la vuelta que dimo, pero no habríamos aprendido sobre evaluaciones no estándar 
 
+.center[
+# 🤓
+
+]
 
 
 
 ---
-
 background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Aplicación en purrr
-
-### Podemos usar todas estas ideas en el paquete purrr
-
-### `imap` permite iterar sobre una lista y sus nombres
-
-
-```r
-continents &lt;- split(gapminder, gapminder$continent)
-```
-
-
-
-```r
-continents2 &lt;- continents %&gt;% 
-  
-  imap(~mutate(.x, !!sym(.y) := log10(pop))  )
-
-models &lt;- continents %&gt;% 
-  map(~lm(lifeExp ~ gdpPercap, data = .x)) %&gt;% # estimar modelo 
-  map(coef) %&gt;% # extraer coeficientes
-  map_dbl(2)
-
-continents2[[1]] %&gt;% names()
-```
-
-```
-## [1] "country"   "continent" "year"      "lifeExp"   "pop"       "gdpPercap"
-## [7] "Africa"
-```
-
-```r
-continents2[[2]] %&gt;% names()
-```
-
-```
-## [1] "country"   "continent" "year"      "lifeExp"   "pop"       "gdpPercap"
-## [7] "Americas"
-```
-
-```r
-names(gapminder)
-```
-
-```
-## [1] "country"   "continent" "year"      "lifeExp"   "pop"       "gdpPercap"
-```
-
-
-
-
-```r
-x &lt;- 100
-eval_tidy(expr(x + 1), env =  env(x = 2)  )
-```
-
-```
-## [1] 3
-```
-
-```r
-weird_env &lt;- env()
-
-`+`(1, 2)
-```
-
-```
-## [1] 3
-```
-
-```r
-weird_env$`+` &lt;- function(x, y) {
-  paste(x , y)
-}
-
-
-weird_env$`+`
-```
-
-```
-## function(x, y) {
-##   paste(x , y)
-## }
-```
-
-```r
-eval_tidy(expr("un" + "saludo"), env =  weird_env  )
-```
-
-```
-## [1] "un saludo"
-```
-
-```r
-`(` &lt;- function(e1) {
-  if (is.numeric(e1) &amp;&amp; runif(1) &lt; 0.1) {
-    e1 + 1
-  } else {
-    e1
-  }
-}
-
-
-nuevo_mas &lt;- function(...) {
-  `+` &lt;- function(x, y) {
-    if (is.character(x) | is.character(y)) {
-      paste(...)    
-    } else   {
-      sum(x, y)
-    }
-}
-  
-x + y    
-
-}
-
-test &lt;- function(...) {
-  user_params &lt;- list(...)
-  
-  return(rlang::exprs(user_params) )
-}
-
-y &lt;- 3
-test(1, x, y)
-```
-
-```
-## [[1]]
-## user_params
-```
-
-```r
-nuevo_mas(10, 1)
-```
-
-```
-## [1] 103
-```
+# Tarea para la 🏠
 
 ---
 
@@ -1744,11 +1794,11 @@ class: center, middle
 
 &lt;img src="imagenes/logo_portada2.png" width="200" /&gt;
 
-## Capacitación en R avanzado
+## Capacitación en R intermedio
 
 ## Proyecto Estratégico Servicios Compartidos para la Producción Estadística
 
-### Diciembre 2021
+### Agosto 2022
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
@@ -1797,19 +1847,6 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     deleted = true;
   });
 })();
-// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
-// screen reader (see PR #262)
-(function(d) {
-  let res = {};
-  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
-    const t = tr.querySelector('td:nth-child(2)').innerText;
-    tr.querySelectorAll('td:first-child .key').forEach(key => {
-      const k = key.innerText;
-      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
-    });
-  });
-  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
-})(document);
 (function() {
   "use strict"
   // Replace <script> tags in slides area to make them executable

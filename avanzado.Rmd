@@ -22,7 +22,7 @@ class: center, middle
 
 <img src="imagenes/logo_portada2.png" width="200" />
 
-## Capacitación en R avanzado
+## Capacitación en R intermedio
 
 ## Proyecto Estratégico Servicios Compartidos para la Producción Estadística
 
@@ -250,7 +250,7 @@ mtcars2 <- mtcars %>%
 ```
 
 .center[
-### En las próximas láminas haremos un repaso de funciones
+### Nota: ¡En las próximas láminas haremos un repaso de funciones!
 ]
 
 --
@@ -334,6 +334,7 @@ background-size: contain;
 background-position: 100% 0%
 
 # Repaso de funciones
+
 
 ### *Scope* de una función
 
@@ -576,7 +577,6 @@ sumar_xyz <- function(x, y, z) {
 sumar_xyz(1, 2)
 ```
 
-
 ---
 
 background-image: url("imagenes/fondo2.PNG")
@@ -606,27 +606,23 @@ background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Comentario al margen sobre funciones infix
+# Argumentos por defecto
 
-### En `R` los operadores suma, resta, multiplicación, etc son un tipo especial de función llamada *infix*
-
-```{r, eval=F}
-3 + 2
-3 * 2
-```
-
---
-
-### Las podemos escribir como *prefix* 
+### En algunos casos vale la pena incluir argumentos por defecto
 
 ```{r}
-`+`(3, 2)
-`*`(3, 2)
+sumar_xyz <- function(x, y, z = 5) {
+  x + y + z
+}
+sumar_xyz(1, 2)
 ```
-
 --
 
-### En algunos lenguajes de programación, como python, estos operadores tienen características muy útiles
+### Si explicitamos un valor para *z*, la función se evalúa en dicho valor
+
+```{r}
+sumar_xyz(1, 2, 0.4)
+```
 
 
 
@@ -638,32 +634,92 @@ background-position: 100% 0%
 
 # Comentario al margen sobre funciones infix
 
-### Podemos cambiar el compartamiento de estas funciones a nuestra conveniencia 
+### En `R` los operadores suma, resta, multiplicación, etc son un tipo especial de función llamada *infix*
+
+```{r, eval=F}
+3 + 2
+3 * 2
+```
+
+--
+
+### Las podemos escribir en su forma *prefix* 
+
+```{r}
+`+`(3, 2)
+`*`(3, 2)
+```
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Comentario al margen sobre funciones infix
+
+
+### En algunos lenguajes de programación, como python, estos operadores tienen características muy útiles
+
+```{python}
+"perro" + " gato"
+```
+
+```{python}
+3 * " perro"
+```
+
+--
+
+### Podemos cambiar el comportamiento de estas funciones a nuestra conveniencia 
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Comentario al margen sobre funciones infix
 
 ### Vamos a definir que "+" concatene strings
 
 --
 
 ```{r}
-
 `+` <- function(x, y) {
   paste(x , y)
 }
-
 "perro" + "gato"
 
 ```
 
 ### Ahora "+" concatena strings 😀😀
 
---
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
 
-El problema es que hemos perdido la funcionalidad más importante de "+"  
+# Comentario al margen sobre funciones infix
+
+### El problema es que hemos perdido la funcionalidad más importante de "+" 😞
 
 
 ```{r}
 3 + 2
 ```
+--
+
+### ¿Y qué tal si restringimos el ámbito de acción de +?
+
+.center[
+<img src="https://media.giphy.com/media/UP9ItQNj52DsM3e29m/giphy.gif" width="200" />
+]
+
+
+
+
 ```{r, echo=F}
 rm(`+`)
 ```
@@ -679,6 +735,8 @@ background-position: 100% 0%
 ### En general, no es buena idea redefinir este tipo de operadores en el ambiente global
 
 ### Pero podemos crear ambientes nuevos en los que este comportamiento sea útil
+
+--
 
 ```{r}
 
@@ -702,6 +760,8 @@ eval_tidy(expr("un" + "saludo"), env =  ambiente_esoterico  )
 ```{r, error=T}
 "un" + "saludo"
 ```
+
+--
 
 ### Esto es una herramienta poderosa para desarrollar paquetes o aplicaciones
 
@@ -835,7 +895,7 @@ background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Ventajas de `purrr`
+# Ventajas de purrr
 
 Permite abstraernos de lo que hace la función
 
@@ -936,33 +996,6 @@ El parámetro que varía va a la izquierda y el parámetro fijo a la derecha
 
 
 ---
-background-image: url("imagenes/fondo2.PNG")
-background-size: contain;
-background-position: 100% 0%
-
-# Flujo de trabajo con purrr
-
-### Separamos el dataset usando `year`
-
-```{r}
-library(gapminder)
-gapminder_years <- gapminder %>% 
-  split(gapminder$year)
-```
-
---
-
-### Estimar un modelo para cada año
-
-
-```{r}
-gapminder_years %>% 
-  map(~lm(lifeExp ~ gdpPercap, data = .x)) %>% # estimar modelo 
-  map(coef) %>% # extraer coeficientes
-  map_dbl(2) # extraer el segundo elemento 
-```
-
----
 
 background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
@@ -1036,7 +1069,7 @@ background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Remover *side-effects* 
+# Trabajar con *side-effects* 
 
 ### A veces, nos interesa una función por sus *side-effects*
 
@@ -1046,7 +1079,7 @@ map(animales, print)
 ```
 --
 
-### `map` está creando una lista y, además, se imprimiendo los valores
+### `map` está creando una lista y, además, está imprimiendo los valores
 
 ---
 
@@ -1054,11 +1087,11 @@ background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Usando `walk`
+# Usando walk
 
 
 .center[
-<img src="https://www.musicme.cl/wp-content/uploads/2021/07/ab67616d0000b273347c0a40c1e3f0c890a6d9d6.jpg" width="300" />
+<img src="imagenes/walk.jpg" width="350" />
 ]
 
 --
@@ -1077,6 +1110,11 @@ background-position: 100% 0%
 # Usando `walk`
 
 ### Necesito escribir archivos  
+
+```{r, echo=F}
+library(gapminder)
+```
+
 
 ```{r}
 continentes <- split(gapminder, gapminder$continent)
@@ -1104,7 +1142,7 @@ background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Introducción a la programación
+# Introducción a la programación con dplyr
 
 ### ¿Han intentado programar una función usando dplyr?
 
@@ -1138,7 +1176,7 @@ background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Introducción a la programación
+# Introducción a la programación con dplyr
 
 ### Cambiemos un par de cosas
 
@@ -1306,7 +1344,11 @@ background-position: 100% 0%
 
 ### ¿Qué significa esto `min(!!enquo_var)` ?
 
+
+.center[
 <img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" />
+]
+
 
 --
 
@@ -1323,11 +1365,8 @@ calcular_cosas <- function(data, var) {
   data %>% 
     summarise(min = min(!!enquo_var)) #<<
 }
-
 calcular_cosas(gapminder, pop)
-
 ```
-
 
 ### Estamos evaluando la variable enquo_var
 
@@ -1336,7 +1375,7 @@ background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Usar el código del usario 
+# Usar el código del usuario 
 
 ### ¿Qué pasa si queremos una función que use el nombre de un parámetro, para nombrar una variable?
 
@@ -1359,7 +1398,7 @@ calcular_cosas(gapminder, pop)
 
 --
 
-### `R` fue demasiado literal
+### `R` fue demasiado literal. Usó el nombre "var"
 
 ---
 
@@ -1367,7 +1406,7 @@ background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Usar el código del usario 
+# Usar el código del usuario 
 
 ### Idea número 2
 
@@ -1451,48 +1490,23 @@ calcular_cosas <- function(data, var) {
 calcular_cosas(gapminder, pop)
 ```
 
-### Nos evita dar una vuelta larga, pero no habríamos aprendido sobre evaluaciones no estándar 🤓
+--
 
+### Este operador nos hubiera evitado la vuelta que dimo, pero no habríamos aprendido sobre evaluaciones no estándar 
 
+.center[
+# 🤓
+
+]
 
 
 
 ---
-
 background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Aplicación en purrr
-
-### Podemos usar todas estas ideas en el paquete purrr
-
-### `imap` permite iterar sobre una lista y sus nombres
-
-```{r}
-continents <- split(gapminder, gapminder$continent)
-
-```
-
-
-```{r}
-continents2 <- continents %>% 
-  
-  imap(~mutate(.x, !!sym(.y) := log10(pop))  )
-
-models <- continents %>% 
-  map(~lm(lifeExp ~ gdpPercap, data = .x)) %>% # estimar modelo 
-  map(coef) %>% # extraer coeficientes
-  map_dbl(2)
-
-continents2[[1]] %>% names()
-continents2[[2]] %>% names()
-
-names(gapminder)
-
-```
-
-
+# Tarea para la 🏠
 
 ---
 
@@ -1503,8 +1517,8 @@ class: center, middle
 
 <img src="imagenes/logo_portada2.png" width="200" />
 
-## Capacitación en R avanzado
+## Capacitación en R intermedio
 
 ## Proyecto Estratégico Servicios Compartidos para la Producción Estadística
 
-### Diciembre 2021
+### Agosto 2022
