@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Capacitación paquete calidad</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="" />
+    <meta name="date" content="2022-06-15" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+
+class: center, middle
+
+.linea-superior[]
+.linea-inferior[]
+
+&lt;img src="imagenes/logo_portada2.png" width="200" /&gt;
+
+## Capacitación en R intermedio
+
+## Proyecto Estratégico Servicios Compartidos para la Producción Estadística
+
+### Agosto 2022
+
+
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Estructura del taller
+
+**Objetivos de la clase**
+
+- "Loops" en dplyr
+
+--
+
+- Repaso de funciones en `R`
+
+--
+
+- Funcionales
+
+--
+
+- Programación con dplyr (evaluaciones no estándar)
+
+---
+
+
+class: inverse, center, middle
+
+# I. "Loops" en dplyr
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# "Loops" en dplyr
+
+### Necesito normalizar todas las columnas de mi dataset
+
+$$ norm = \frac{x - min(x)}{max(x) - min(x)}    $$
+
+--
+
+
+
+
+
+```r
+mtcars2 &lt;- mtcars
+for (var in names(mtcars)) {
+  mtcars2[[var]] &lt;- (mtcars[[var]] - min(mtcars[[var]])) / (max(mtcars[[var]]) - min(mtcars[[var]]))
+}
+```
+
+
+
+```
+##                     mpg cyl      disp
+## Mazda RX4     0.4510638 0.5 0.2217511
+## Mazda RX4 Wag 0.4510638 0.5 0.2217511
+```
+
+--
+
+### Estilo `dplyr`
+
+
+```r
+mtcars2 &lt;- mtcars %&gt;% 
+  mutate_all(~ (. - min(.)) / (max(.) - min(.)) ) 
+```
+
+
+```
+##                     mpg cyl      disp
+## Mazda RX4     0.4510638 0.5 0.2217511
+## Mazda RX4 Wag 0.4510638 0.5 0.2217511
+```
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Solo para algunas variables
+
+### Solo me interesa `mpg` y `disp`
+
+
+```r
+mtcars2 &lt;- mtcars %&gt;% 
+  mutate_at(vars(mpg, disp), ~ (. - min(.)) / (max(.) - min(.)) )
+```
+
+--
+
+### Quiero crear variables nuevas, en lugar de sobrescribr
+
+
+
+```r
+mtcars2 &lt;- mtcars %&gt;% 
+  mutate_at(vars(mpg, disp),  list(norm = ~(. - min(.)) / (max(.) - min(.)) ))
+```
+
+
+```r
+names(mtcars2)
+```
+
+```
+##  [1] "mpg"       "cyl"       "disp"      "hp"        "drat"      "wt"       
+##  [7] "qsec"      "vs"        "am"        "gear"      "carb"      "mpg_norm" 
+## [13] "disp_norm"
+```
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Solo para algunas variables
+
+
+### La sintaxis de mutate_at es muy clara, pero está quedando obsoleta 👀
+
+--
+
+
+```r
+mtcars2 &lt;- mtcars %&gt;% 
+  mutate(across(c("mpg", "disp") , .fns =  list(norm = ~(. - min(.)) / (max(.) - min(.)) )))
+```
+
+--
+
+### Podemos adecuar los nombres a nuestro gusto
+
+
+```r
+mtcars2 &lt;- mtcars %&gt;% 
+  mutate(across(c("mpg", "disp") , .fns =  list(norm = ~(. - min(.)) / (max(.) - min(.)) ),
+                .names = "{.col}_{.fn}"))
+
+names(mtcars2)
+```
+
+```
+##  [1] "mpg"       "cyl"       "disp"      "hp"        "drat"      "wt"       
+##  [7] "qsec"      "vs"        "am"        "gear"      "carb"      "mpg_norm" 
+## [13] "disp_norm"
+```
+
+--
+
+### Operar sobre todas las variables numéricas
+
+
+
+```r
+mtcars2 &lt;- mtcars %&gt;% 
+  mutate_if(is.numeric,  list(norm =  ~(. - min(.)) / (max(.) - min(.)) ))
+```
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Operaciones complejas
+
+
+### ¿Qué pasa si necesito hacer una operación compleja sobre los datos?
+
+.pull-left[
+- Normalizar
+- Sumar algo
+- Dividir por algo
+
+]
+
+.pull-right[
+&lt;img src="https://media.giphy.com/media/a5viI92PAF89q/giphy.gif" width="200" /&gt;
+]
+
+--
+
+### Opción "carretera" 
+
+
+```r
+mtcars2 &lt;- mtcars %&gt;% 
+  mutate_at(vars(mpg, disp),  list(norm = ~(. - min(.)) / (max(.) - min(.)) )) %&gt;% 
+  mutate_at(vars(mpg_norm, disp_norm),  ~(. + mean(.))) %&gt;% 
+  mutate_at(vars(mpg_norm, disp_norm),  ~(. / median(.)))
+```
+
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Operaciones complejas 
+
+### Podemos construir una función y luego usarla dentro de `mutate_at`
+
+
+```r
+hacer_calculos &lt;- function(x) {
+  normalizar &lt;-  (x - min(x)) / (max(x) - min(x))
+  norm_media &lt;-  normalizar + mean(normalizar)
+  norm_mediana &lt;- norm_media / median(norm_media)
+  return(norm_mediana)
+}
+
+mtcars2 &lt;- mtcars %&gt;% 
+  mutate_at(vars(mpg, disp),  list(norm = hacer_calculos) ) 
+```
+
+.center[
+### Nota: ¡En las próximas láminas haremos un repaso de funciones!
+]
+
+--
+
+### Alternativamente
+
+
+```r
+mtcars2 &lt;- mtcars %&gt;% 
+  mutate_at(vars(mpg, disp),  list(norm = ~hacer_calculos(.) ) ) 
+```
+
+
+
+---
+
+class: inverse, center, middle
+
+# II. Repaso ~~breve~~  de funciones
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+Las funciones tienen 3 componentes:
+
+- `body`
+- `formals` (argumentos)
+- `enviroment`
+
+
+
+```r
+sumar_xy &lt;- function(x, y) {
+  x + y
+}
+```
+
+
+```r
+body(sumar_xy)
+```
+
+```
+## {
+##     x + y
+## }
+```
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+
+```r
+formals(sumar_xy)
+```
+
+```
+## $x
+## 
+## 
+## $y
+```
+--
+
+
+```r
+environment(sumar_xy)
+```
+
+```
+## &lt;environment: R_GlobalEnv&gt;
+```
+--
+
+
+```r
+wrapper &lt;- function() {
+  sumar_xy &lt;- function(x, y) {
+    x + y
+  }
+  return(environment(sumar_xy))  
+}
+
+wrapper
+```
+
+```
+## function() {
+##   sumar_xy &lt;- function(x, y) {
+##     x + y
+##   }
+##   return(environment(sumar_xy))  
+## }
+```
+### Vemos que el ambiente ya no es R_GlobalEnv 🤓
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+
+### *Scope* de una función
+
+
+
+```r
+z &lt;- 3
+crear_z &lt;- function() {
+  z &lt;- 100
+  return(z)
+}
+
+crear_z()
+```
+
+```
+## [1] 100
+```
+
+```r
+print(z)
+```
+
+```
+## [1] 3
+```
+--
+
+### La variable z vive en el *scope* de `crear_z` y no afecta a z inicial  
+
+
+
+---
+
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+### Las funciones buscan variables "hacia arriba"
+
+
+```r
+sumar_xy &lt;- function(x, y) {
+  x + y + z
+}
+sumar_xy(1, 2)
+```
+
+```
+## [1] 6
+```
+
+--
+
+### ¿Qué devuelve la función sumar_xy?
+
+
+```r
+z &lt;- 1
+sumar_xy &lt;- function(x, y) {
+  z &lt;- 100
+  x + y + z
+}
+sumar_xy(1, 2)
+```
+
+--
+
+
+```
+## [1] 103
+```
+### `z` asume el primer valor encontrado
+
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+### ¿Qué devuelve la función sumar_xy?
+
+
+
+```r
+z &lt;- 1
+sumar_xy &lt;- function(x, y) {
+  z &lt;- 100
+  interna &lt;- function(){
+    c(x + y + z)
+  }
+  
+  interna()
+  
+}
+sumar_xy(1, 2)
+```
+--
+
+
+
+```
+## [1] 103
+```
+### La función `interna` encontró a `x = 1`, `y = 2` y `z = 100`,  
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+### ¿Qué devuelve `sumar_xy`?
+
+
+```r
+z &lt;- 1
+externa &lt;- function(){
+  c(x + y + z)
+}
+sumar_xy &lt;- function(x, y) {
+  z &lt;- 100
+  externa()
+}
+*sumar_xy(1, 2)
+```
+--
+
+
+```
+## Error in externa(): objeto 'x' no encontrado
+```
+.pull-left[
+&lt;img src="https://media.giphy.com/media/a5viI92PAF89q/giphy.gif" width="250" /&gt;
+]
+
+--
+
+.pull-right[
+### Las funciones buscan primero en el ambiente en el que fueron creadas
+
+### `externa` fue creada en el mismo ambiente que `z = 1`
+
+]
+
+
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+### Reparemos el script anterior 
+
+
+
+```r
+z &lt;- 1
+externa &lt;- function(x, y){
+    c(x + y + z)
+}
+sumar_xy &lt;- function(x, y) {
+  z &lt;- 100
+* externa(x, y)
+}
+sumar_xy(1, 2)
+```
+--
+
+
+```
+## [1] 4
+```
+
+--
+
+.center[
+&lt;img src="https://media.giphy.com/media/iIHBIgCIBlE4IoKm7w/giphy.gif" width="200" /&gt;
+]
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+
+.pull-left[
+### Evaluación *lazy*  
+]
+
+.pull-right[
+&lt;img src="https://www.inventorsdigest.com/wp-content/uploads/2018/01/lazy-sloth-1080x640.gif" width="200" /&gt;
+]
+
+
+
+```r
+sumar_xyz &lt;- function(x, y, z) {
+  x + y
+}
+sumar_xyz(1, 2)
+```
+
+```
+## [1] 3
+```
+--
+
+### La variable `z` no se evalúa hasta que realmente se necesita 
+
+
+```r
+sumar_xyz &lt;- function(x, y, z) {
+  x + y + z
+}
+sumar_xyz(1, 2)
+```
+
+```
+## Error in sumar_xyz(1, 2): el argumento "z" está ausente, sin valor por omisión
+```
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+### En otros lenguajes, la evaluación no es *lazy*
+
+
+
+
+```python
+def sumar_xyz(x, y, z):
+  return(x + y)
+print(sumar_xyz(1, 2))
+```
+
+```
+## Error in py_call_impl(callable, dots$args, dots$keywords): TypeError: sumar_xyz() missing 1 required positional argument: 'z'
+## 
+## Detailed traceback:
+##   File "&lt;string&gt;", line 1, in &lt;module&gt;
+```
+
+### `python` utiliza *call by value* (CBV)
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Argumentos por defecto
+
+### En algunos casos vale la pena incluir argumentos por defecto
+
+
+```r
+sumar_xyz &lt;- function(x, y, z = 5) {
+  x + y + z
+}
+sumar_xyz(1, 2)
+```
+
+```
+## [1] 8
+```
+--
+
+### Si explicitamos un valor para *z*, la función se evalúa en dicho valor
+
+
+```r
+sumar_xyz(1, 2, 0.4)
+```
+
+```
+## [1] 3.4
+```
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Comentario al margen sobre funciones infix
+
+### En `R` los operadores suma, resta, multiplicación, etc son un tipo especial de función llamada *infix*
+
+
+```r
+3 + 2
+3 * 2
+```
+
+--
+
+### Las podemos escribir en su forma *prefix* 
+
+
+```r
+`+`(3, 2)
+```
+
+```
+## [1] 5
+```
+
+```r
+`*`(3, 2)
+```
+
+```
+## [1] 6
+```
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Comentario al margen sobre funciones infix
+
+
+### En algunos lenguajes de programación, como python, estos operadores tienen características muy útiles
+
+
+```python
+"perro" + " gato"
+```
+
+```
+## 'perro gato'
+```
+
+
+```python
+3 * " perro"
+```
+
+```
+## ' perro perro perro'
+```
+
+--
+
+### Podemos cambiar el comportamiento de estas funciones a nuestra conveniencia 
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Comentario al margen sobre funciones infix
+
+### Vamos a definir que "+" concatene strings
+
+--
+
+
+```r
+`+` &lt;- function(x, y) {
+  paste(x , y)
+}
+"perro" + "gato"
+```
+
+```
+## [1] "perro gato"
+```
+
+### Ahora "+" concatena strings 😀😀
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Comentario al margen sobre funciones infix
+
+### El problema es que hemos perdido la funcionalidad más importante de "+" 😞
+
+
+
+```r
+3 + 2
+```
+
+```
+## [1] "3 2"
+```
+--
+
+### ¿Y qué tal si restringimos el ámbito de acción de +?
+
+.center[
+&lt;img src="https://media.giphy.com/media/UP9ItQNj52DsM3e29m/giphy.gif" width="200" /&gt;
+]
+
+
+
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Comentario al margen sobre funciones infix
+
+### En general, no es buena idea redefinir este tipo de operadores en el ambiente global
+
+### Pero podemos crear ambientes nuevos en los que este comportamiento sea útil
+
+--
+
+
+```r
+ambiente_esoterico &lt;- env()
+
+ambiente_esoterico$`+` &lt;- function(x, y) {
+  paste(x , y)
+}
+
+eval_tidy(expr("un" + "saludo"), env =  ambiente_esoterico  )
+```
+
+```
+## [1] "un saludo"
+```
+
+--
+
+### Fuera de nuestro ambiente, el operador sigue funcionando normalmente
+
+
+```r
+"un" + "saludo"
+```
+
+```
+## Error in "un" + "saludo": argumento no-numérico para operador binario
+```
+
+--
+
+### Esto es una herramienta poderosa para desarrollar paquetes o aplicaciones
+
+
+
+---
+
+
+class: inverse, center, middle
+
+# III. functionals 
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Introducción a funcionales (functionals)
+
+
+*"To become significantly more reliable, code must become more transparent. In particular, nested conditions and loops must be viewed with great suspicion. Complicated control flows confuse programmers. Messy code often hides bugs."*
+
+- Bjarne Stroustrup
+
+--
+
+Una "funcional" (*functional*) es una función que recibe como input otra función
+
+
+```r
+randomise &lt;- function(f) f(runif(10))
+```
+--
+
+`randomise` recibe una función y hace algo con un vector de 10 números aleatorios
+
+
+```r
+randomise(mean)
+```
+
+```
+## [1] 0.4345167
+```
+
+```r
+randomise(sum)
+```
+
+```
+## [1] 5.962768
+```
+
+```r
+randomise(median)
+```
+
+```
+## [1] 0.342984
+```
+
+
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Introducción a funcionales (functionals)
+
+Es muy probable que ustedes hayan usados funcionales con `R` base
+
+- `apply`, `lapply`, `sapply` 
+
+--
+
+Los loops tienen mala fama en `R`
+
+--
+
+Típicamente, las funcionales se usan como alternativa a los *loops*
+
+--
+
+Nosotros trabajaremos con el paquete `purrr`
+
+
+```r
+library(purrr)
+```
+
+
+.center[
+&lt;img src="imagenes/purrr.png" width="200" /&gt;
+]
+
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Mi primera funcional
+
+Función que calcula el triple del input
+
+
+```r
+triple &lt;- function(x) x * 3
+```
+
+--
+
+`map` lleva el vector `1:3` hacia la función triple
+
+
+```r
+map(1:3, triple)
+```
+
+```
+## [[1]]
+## [1] 3
+## 
+## [[2]]
+## [1] 6
+## 
+## [[3]]
+## [1] 9
+```
+
+
+
+.center[
+&lt;img src="https://d33wubrfki0l68.cloudfront.net/f0494d020aa517ae7b1011cea4c4a9f21702df8b/2577b/diagrams/functionals/map.png" width="200" /&gt;
+]
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# ¿Qué tienen que ver los mapas?
+
+.center[
+&lt;img src="imagenes/mapa.png" width="400" /&gt;
+]
+
+
+--
+
+.center[
+&lt;img src="imagenes/mapear_funcion.png" width="400" /&gt;
+]
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Ventajas de purrr
+
+Permite abstraernos de lo que hace la función
+
+--
+
+Tenemos claridad de lo que entra y sale de la función 
+
+- `map` devuelve una lista
+- `map_int` devuelve vector de enteros
+- `map_dbl` devuelve vector de reales
+- `map_chr` devuelve vector de characters
+- `map_df` devuelve un dataframe
+
+
+```r
+triple_chr &lt;- function(x) as.character(x * 3)
+map_int(1:3, triple_chr)
+```
+
+```
+## Error: Can't coerce element 1 from a character to a integer
+```
+
+```r
+map_chr(1:3, triple_chr)
+```
+
+```
+## [1] "3" "6" "9"
+```
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Trabajando con listas anidadas
+
+### La función `mean` se evalúa en cada uno de los vectores de la lista
+
+
+```r
+lista_vectores &lt;- list(1:3, 1:10, 2:9, 1)
+map_dbl(lista_vectores, mean)
+```
+
+```
+## [1] 2.0 5.5 5.5 1.0
+```
+--
+
+### ¿Cómo uso esto en un dataframe?
+
+
+.center[
+&lt;img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" /&gt;
+]
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Trabajando con dataframes
+
+### En `R`, los `dataframes` son listas con vectores de la misma longitud
+
+
+```r
+typeof(mtcars)
+```
+
+```
+## [1] "list"
+```
+--
+
+
+```r
+map_dbl(mtcars, mean)
+```
+
+```
+##        mpg        cyl       disp         hp       drat         wt       qsec 
+##  20.090625   6.187500 230.721875 146.687500   3.596563   3.217250  17.848750 
+##         vs         am       gear       carb 
+##   0.437500   0.406250   3.687500   2.812500
+```
+
+.center[
+&lt;img src="https://media.giphy.com/media/l3V0dy1zzyjbYTQQM/giphy.gif" width="250" /&gt;
+]
+
+
+
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Trabajando con más argumentos
+
+### ¿Qué pasa si queremos usar más argumentos?
+
+
+```r
+lista_vectores &lt;- list(1:3, c(1:10, NA))
+map_dbl(lista_vectores, ~mean(.x, na.rm = TRUE))
+```
+
+```
+## [1] 2.0 5.5
+```
+
+`.x` toma el valor de los elementos que están dentro de `lista_vectores` 
+
+El parámetro que varía va a la izquierda y el parámetro fijo a la derecha
+
+--
+
+.center[
+&lt;img src="https://d33wubrfki0l68.cloudfront.net/e1b3536a7556aef348f546a79277125c419a5fdc/0c0a1/diagrams/functionals/map-arg.png" width="400" /&gt;
+]
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Usando 2 inputs 
+
+### La función `media_sumar` calcula la media y suma un valor
+
+
+```r
+media_sumar &lt;- function(vector, valor) {
+  mean(vector) + valor
+}
+```
+
+### Queremos que la función itere sobre `lista_vectores` y sobre `valores`
+
+
+```r
+lista_vectores &lt;- list(1:3, 1:5, 2:5)
+valores &lt;- c(2, 3, 8)
+```
+
+--
+
+
+```r
+map2_dbl(lista_vectores, valores, media_sumar)
+```
+
+```
+## [1]  4.0  6.0 11.5
+```
+
+.center[
+&lt;img src="https://d33wubrfki0l68.cloudfront.net/f5cddf51ec9c243a7c13732b0ce46b0868bf8a31/501a8/diagrams/functionals/map2.png" width="300" /&gt;
+]
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Usando *n* cantidad de inputs 
+
+### Necesitamos iterar sobre 3 vectores
+
+
+```r
+media_sumar_dividir &lt;- function(vector, valor_suma, valor_division) {
+  (mean(vector) + valor_suma) / valor_division
+}
+
+lista_vectores &lt;- list(1:3, 1:5, 2:5)
+valores_suma &lt;- c(2, 3, 8)
+valores_division &lt;- c(2, 1, 9)
+```
+
+--
+
+
+```r
+pmap_dbl(list(lista_vectores, valores_suma, valores_division), media_sumar_dividir)
+```
+
+```
+## [1] 2.000000 6.000000 1.277778
+```
+
+
+.center[
+&lt;img src="https://d33wubrfki0l68.cloudfront.net/2eb2eefe34ad6d114da2a22df42deac8511b4788/5a538/diagrams/functionals/pmap-arg.png" width="300" /&gt;
+]
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Trabajar con *side-effects* 
+
+### A veces, nos interesa una función por sus *side-effects*
+
+
+```r
+animales &lt;- c("perro", "gato", "elefante")
+map(animales, print)
+```
+
+```
+## [1] "perro"
+## [1] "gato"
+## [1] "elefante"
+```
+
+```
+## [[1]]
+## [1] "perro"
+## 
+## [[2]]
+## [1] "gato"
+## 
+## [[3]]
+## [1] "elefante"
+```
+--
+
+### `map` está creando una lista y, además, está imprimiendo los valores
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Usando walk
+
+
+.center[
+&lt;img src="imagenes/walk.jpg" width="350" /&gt;
+]
+
+--
+
+
+```r
+walk(animales, print)
+```
+
+```
+## [1] "perro"
+## [1] "gato"
+## [1] "elefante"
+```
+
+### Ahora solo estamos imprimiendo los strings
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Usando `walk`
+
+### Necesito escribir archivos  
+
+
+
+
+
+```r
+continentes &lt;- split(gapminder, gapminder$continent)
+```
+
+
+```r
+library(feather)
+files &lt;- paste0("data/", names(continentes), ".feather")
+walk2(continentes, files, write_feather)
+```
+
+
+---
+
+
+class: inverse, center, middle
+
+# IV. Programación con dplyr
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Introducción a la programación con dplyr
+
+### ¿Han intentado programar una función usando dplyr?
+
+--
+
+### Queremos una función que calcule mínimo, máximo, media y mediana 
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  data %&gt;% 
+    summarise(min = min(var),
+              max = max(var),
+              mean = mean(var),
+              median = median(var)
+              )
+}
+
+calcular_cosas(gapminder, pop)
+```
+
+```
+## Error: Problem with `summarise()` input `min`.
+## x objeto 'pop' no encontrado
+## i Input `min` is `min(var)`.
+```
+
+
+.center[
+&lt;img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" /&gt;
+]
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Introducción a la programación con dplyr
+
+### Cambiemos un par de cosas
+
+
+
+```r
+library(rlang)
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- enexpr(var)
+
+  data %&gt;% 
+    summarise(min = min(!!enquo_var),
+              max = max(!!enquo_var),
+              mean = mean(!!enquo_var),
+              median = median(!!enquo_var)
+              )
+}
+
+calcular_cosas(gapminder, pop)
+```
+
+```
+## # A tibble: 1 x 4
+##     min        max      mean   median
+##   &lt;int&gt;      &lt;int&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 60011 1318683096 29601212. 7023596.
+```
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Evaluaciones no estándar
+
+### En `R`, los argumentos pueden ser *evaluados* o *quoted* (¿citados?)  
+
+- evaluados: situación más usual en R
+- quoted: los argumentos son procesados de una manera "atípica" (evaluación no estándar)
+
+--
+
+### Para saber si un argumento es quoted o evaluado, simplemente ejecutamos el argumento fuera de la función
+
+
+```r
+pop
+```
+
+```
+## Error in eval(expr, envir, enclos): objeto 'pop' no encontrado
+```
+--
+
+### Si la ejecución no funciona, el argumento es quoted
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Ejemplos de argumentos quoted y evaluados
+
+### Argumentos evaluados
+
+
+```r
+sum(mtcars$am)
+class(mtcars)
+```
+
+--
+
+### Argumentos quoted
+
+
+```r
+library(dplyr)
+
+by_cyl &lt;- mtcars %&gt;%
+  summarise(mean = mean(mpg)) 
+
+calcular_cosas(gapminder, pop) # &lt;&lt;
+```
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Expresiones
+
+### Evaluar de manera no estándar consiste en atrapar expresiones y evaluarlas en otro momento
+
+
+```r
+expr(x + y)
+```
+
+```
+## x + y
+```
+--
+
+
+
+
+```r
+devolver_expresion &lt;- function(x) {
+  expr(x)
+}
+
+devolver_expresion(a + b)
+```
+
+```
+## x
+```
+### La función `expr` es demasiado literal
+
+--
+
+### Podemos usar enexpr (enrich) 
+
+
+```r
+devolver_expresion &lt;- function(x) {
+  enexpr(x)
+}
+
+devolver_expresion(a + b)
+```
+
+```
+## a + b
+```
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Expresiones
+
+### Volviendo a nuestra función `calcular_cosas`...
+ 
+
+```r
+calcular_cosas &lt;- function(data, var) {
+* enquo_var &lt;- enexpr(var)
+
+  data %&gt;% 
+    summarise(min = min(!!enquo_var),
+              max = max(!!enquo_var),
+              mean = mean(!!enquo_var),
+              median = median(!!enquo_var)
+              )
+}
+```
+
+--
+
+### Ya sabemos qué significa la primera línea
+
+
+--
+
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- enexpr(var) 
+  return(enquo_var)
+}
+calcular_cosas(var = pop)
+```
+
+```
+## pop
+```
+
+
+
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Expresiones
+
+### ¿Qué significa esto `min(!!enquo_var)` ?
+
+
+.center[
+&lt;img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" /&gt;
+]
+
+
+--
+
+### Una vez que la expresión se "congela", es necesario evaluarla
+
+### El operador bang-bang (!!) hace *unquoting*
+
+--
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- enexpr(var) 
+
+  data %&gt;% 
+*   summarise(min = min(!!enquo_var))
+}
+calcular_cosas(gapminder, pop)
+```
+
+```
+## # A tibble: 1 x 1
+##     min
+##   &lt;int&gt;
+## 1 60011
+```
+
+### Estamos evaluando la variable enquo_var
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Usar el código del usuario 
+
+### ¿Qué pasa si queremos una función que use el nombre de un parámetro, para nombrar una variable?
+
+
+### Idea número 1
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- enexpr(var) 
+
+  data %&gt;% 
+*   summarise(var = min(!!enquo_var))
+}
+calcular_cosas(gapminder, pop)
+```
+
+```
+## # A tibble: 1 x 1
+##     var
+##   &lt;int&gt;
+## 1 60011
+```
+
+--
+
+### `R` fue demasiado literal. Usó el nombre "var"
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Usar el código del usuario 
+
+### Idea número 2
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- enexpr(var) 
+
+  data %&gt;% 
+    summarise(!!enquo_var = min(!!enquo_var)) 
+}
+calcular_cosas(gapminder, pop)
+```
+
+```
+## Error: &lt;text&gt;:5:27: inesperado '='
+## 4:   data %&gt;% 
+## 5:     summarise(!!enquo_var =
+##                              ^
+```
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Operador :=
+
+### Debemos resolver el problema con un nuevo operador
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- enexpr(var) 
+
+  data %&gt;% 
+*   summarise(!!enquo_var := min(!!enquo_var))
+}
+calcular_cosas(gapminder, pop)
+```
+
+```
+## # A tibble: 1 x 1
+##     pop
+##   &lt;int&gt;
+## 1 60011
+```
+--
+
+### Si queremos entregar un string como input podemos usar `sym` 
+
+### `sym` convierte un string en un símbolo. Esta operación se denomina *parsing*
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- sym(var)
+  data %&gt;% 
+*   summarise(!!enquo_var  := min(!!enquo_var))
+}
+calcular_cosas(gapminder, "pop")
+```
+
+```
+## # A tibble: 1 x 1
+##     pop
+##   &lt;int&gt;
+## 1 60011
+```
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Parsing
+
+### Otra opción es usar la función `parse_expr` de `rlang`
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+* enquo_var &lt;- parse_expr(var)
+  data %&gt;% 
+    summarise(!!enquo_var  := min(!!enquo_var))
+}
+calcular_cosas(gapminder, "pop")
+```
+
+```
+## # A tibble: 1 x 1
+##     pop
+##   &lt;int&gt;
+## 1 60011
+```
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Nueva sintaxis
+
+### Hace un tiempo existe el operador embrace `{{}}`
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  data %&gt;% 
+    summarise({{var}} := min({{var}}))
+}
+calcular_cosas(gapminder, pop)
+```
+
+```
+## # A tibble: 1 x 1
+##     pop
+##   &lt;int&gt;
+## 1 60011
+```
+
+--
+
+### Este operador nos hubiera evitado la vuelta que dimo, pero no habríamos aprendido sobre evaluaciones no estándar 
+
+.center[
+# 🤓
+
+]
+
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Tarea para la 🏠
+
+---
+
+class: center, middle
+
+.linea-superior[]
+.linea-inferior[]
+
+&lt;img src="imagenes/logo_portada2.png" width="200" /&gt;
+
+## Capacitación en R intermedio
+
+## Proyecto Estratégico Servicios Compartidos para la Producción Estadística
+
+### Agosto 2022
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "13:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
