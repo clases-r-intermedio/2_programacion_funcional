@@ -1,0 +1,1510 @@
+---
+title: "Capacitación paquete calidad"
+subtitle: "calidad"
+author: 
+date: '`r Sys.Date()`'
+output:
+  xaringan::moon_reader:
+    seal: false
+    #lib_dir: libs
+    css: xaringan-themer.css
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: False
+      ratio: '13:9'
+---
+
+class: center, middle
+
+.linea-superior[]
+.linea-inferior[]
+
+<img src="imagenes/logo_portada2.png" width="200" />
+
+## Capacitación en R avanzado
+
+## Proyecto Estratégico Servicios Compartidos para la Producción Estadística
+
+### Agosto 2022
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = TRUE)
+knitr::opts_chunk$set(message = FALSE, warning = F) 
+options(scipen = "999")
+```
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(xaringanthemer)
+```
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Estructura del taller
+
+**Objetivos de la clase**
+
+- "Loops" en dplyr
+
+--
+
+- Repaso de funciones en `R`
+
+--
+
+- Funcionales
+
+--
+
+- Programación con dplyr (evaluaciones no estándar)
+
+---
+
+
+class: inverse, center, middle
+
+# I. "Loops" en dplyr
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# "Loops" en dplyr
+
+### Necesito normalizar todas las columnas de mi dataset
+
+$$ norm = \frac{x - min(x)}{max(x) - min(x)}    $$
+
+--
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(rlang)
+```
+
+
+```{r}
+mtcars2 <- mtcars
+for (var in names(mtcars)) {
+  mtcars2[[var]] <- (mtcars[[var]] - min(mtcars[[var]])) / (max(mtcars[[var]]) - min(mtcars[[var]]))
+}
+```
+
+
+```{r, echo=FALSE}
+mtcars2 %>% select(mpg, cyl, disp) %>% slice(1:2)
+```
+
+--
+
+### Estilo `dplyr`
+
+```{r}
+mtcars2 <- mtcars %>% 
+  mutate_all(~ (. - min(.)) / (max(.) - min(.)) ) 
+```
+
+```{r, echo=FALSE}
+mtcars2 %>% select(mpg, cyl, disp) %>% slice(1:2)
+```
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Solo para algunas variables
+
+### Solo me interesa `mpg` y `disp`
+
+```{r}
+mtcars2 <- mtcars %>% 
+  mutate_at(vars(mpg, disp), ~ (. - min(.)) / (max(.) - min(.)) )
+
+```
+
+--
+
+### Quiero crear variables nuevas, en lugar de sobrescribr
+
+
+```{r}
+mtcars2 <- mtcars %>% 
+  mutate_at(vars(mpg, disp),  list(norm = ~(. - min(.)) / (max(.) - min(.)) ))
+
+```
+
+```{r}
+names(mtcars2)
+```
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Solo para algunas variables
+
+
+### La sintaxis de mutate_at es muy clara, pero está quedando obsoleta 👀
+
+--
+
+```{r}
+
+mtcars2 <- mtcars %>% 
+  mutate(across(c("mpg", "disp") , .fns =  list(norm = ~(. - min(.)) / (max(.) - min(.)) )))
+
+
+```
+
+--
+
+### Podemos adecuar los nombres a nuestro gusto
+
+```{r}
+mtcars2 <- mtcars %>% 
+  mutate(across(c("mpg", "disp") , .fns =  list(norm = ~(. - min(.)) / (max(.) - min(.)) ),
+                .names = "{.col}_{.fn}"))
+
+names(mtcars2)
+```
+
+--
+
+### Operar sobre todas las variables numéricas
+
+
+```{r}
+mtcars2 <- mtcars %>% 
+  mutate_if(is.numeric,  list(norm =  ~(. - min(.)) / (max(.) - min(.)) ))
+
+```
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Operaciones complejas
+
+
+### ¿Qué pasa si necesito hacer una operación compleja sobre los datos?
+
+.pull-left[
+- Normalizar
+- Sumar algo
+- Dividir por algo
+
+]
+
+.pull-right[
+<img src="https://media.giphy.com/media/a5viI92PAF89q/giphy.gif" width="200" />
+]
+
+--
+
+### Opción "carretera" 
+
+```{r}
+mtcars2 <- mtcars %>% 
+  mutate_at(vars(mpg, disp),  list(norm = ~(. - min(.)) / (max(.) - min(.)) )) %>% 
+  mutate_at(vars(mpg_norm, disp_norm),  ~(. + mean(.))) %>% 
+  mutate_at(vars(mpg_norm, disp_norm),  ~(. / median(.)))
+
+```
+
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Operaciones complejas 
+
+### Podemos construir una función y luego usarla dentro de `mutate_at`
+
+```{r}
+
+hacer_calculos <- function(x) {
+  normalizar <-  (x - min(x)) / (max(x) - min(x))
+  norm_media <-  normalizar + mean(normalizar)
+  norm_mediana <- norm_media / median(norm_media)
+  return(norm_mediana)
+}
+
+mtcars2 <- mtcars %>% 
+  mutate_at(vars(mpg, disp),  list(norm = hacer_calculos) ) 
+
+```
+
+.center[
+### En las próximas láminas haremos un repaso de funciones
+]
+
+--
+
+### Alternativamente
+
+```{r}
+mtcars2 <- mtcars %>% 
+  mutate_at(vars(mpg, disp),  list(norm = ~hacer_calculos(.) ) ) 
+```
+
+
+
+---
+
+class: inverse, center, middle
+
+# II. Repaso ~~breve~~  de funciones
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+Las funciones tienen 3 componentes:
+
+- `body`
+- `formals` (argumentos)
+- `enviroment`
+
+
+```{r}
+sumar_xy <- function(x, y) {
+  x + y
+}
+```
+
+```{r}
+body(sumar_xy)
+```
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+```{r}
+formals(sumar_xy)
+```
+--
+
+```{r}
+environment(sumar_xy)
+```
+--
+
+```{r}
+
+wrapper <- function() {
+  sumar_xy <- function(x, y) {
+    x + y
+  }
+  return(environment(sumar_xy))  
+}
+
+wrapper
+
+```
+### Vemos que el ambiente ya no es R_GlobalEnv 🤓
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+### *Scope* de una función
+
+
+```{r}
+z <- 3
+crear_z <- function() {
+  z <- 100
+  return(z)
+}
+
+crear_z()
+print(z)
+
+```
+--
+
+### La variable z vive en el *scope* de `crear_z` y no afecta a z inicial  
+
+
+
+---
+
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+### Las funciones buscan variables "hacia arriba"
+
+```{r}
+
+sumar_xy <- function(x, y) {
+  x + y + z
+}
+sumar_xy(1, 2)
+
+```
+
+--
+
+### ¿Qué devuelve la función sumar_xy?
+
+```{r, eval=F}
+z <- 1
+sumar_xy <- function(x, y) {
+  z <- 100
+  x + y + z
+}
+sumar_xy(1, 2)
+```
+
+--
+
+```{r, echo = F}
+z <- 1
+sumar_xy <- function(x, y) {
+  z <- 100
+  x + y + z
+}
+sumar_xy(1, 2)
+```
+### `z` asume el primer valor encontrado
+
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+### ¿Qué devuelve la función sumar_xy?
+
+
+```{r,eval=F}
+z <- 1
+sumar_xy <- function(x, y) {
+  z <- 100
+  interna <- function(){
+    c(x + y + z)
+  }
+  
+  interna()
+  
+}
+sumar_xy(1, 2)
+```
+--
+
+
+```{r, echo=F}
+z <- 1
+sumar_xy <- function(x, y) {
+  z <- 100
+  interna <- function(){
+    c(x + y + z)
+  }
+  
+  interna()
+  
+}
+sumar_xy(1, 2)
+```
+### La función `interna` encontró a `x = 1`, `y = 2` y `z = 100`,  
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+### ¿Qué devuelve `sumar_xy`?
+
+```{r, eval=F}
+z <- 1
+externa <- function(){
+  c(x + y + z)
+}
+sumar_xy <- function(x, y) {
+  z <- 100
+  externa()
+}
+sumar_xy(1, 2) #<<
+
+```
+--
+
+```{r, error=T, echo=F}
+z <- 1
+externa <- function(){
+  c(x + y + z)
+}
+sumar_xy <- function(x, y) {
+  z <- 100
+  externa()
+}
+sumar_xy(1, 2) #<<
+```
+.pull-left[
+<img src="https://media.giphy.com/media/a5viI92PAF89q/giphy.gif" width="250" />
+]
+
+--
+
+.pull-right[
+### Las funciones buscan primero en el ambiente en el que fueron creadas
+
+### `externa` fue creada en el mismo ambiente que `z = 1`
+
+]
+
+
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+### Reparemos el script anterior 
+
+
+```{r, eval=F}
+z <- 1
+externa <- function(x, y){
+    c(x + y + z)
+}
+sumar_xy <- function(x, y) {
+  z <- 100
+  externa(x, y) #<<
+}
+sumar_xy(1, 2)
+```
+--
+
+```{r, echo = F}
+z <- 1
+
+externa <- function(x, y){
+    c(x + y + z)
+}
+sumar_xy <- function(x, y) {
+  z <- 100
+  externa(x, y) #<<
+}
+sumar_xy(1, 2)
+
+```
+
+--
+
+.center[
+<img src="https://media.giphy.com/media/iIHBIgCIBlE4IoKm7w/giphy.gif" width="200" />
+]
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+
+.pull-left[
+### Evaluación *lazy*  
+]
+
+.pull-right[
+<img src="https://www.inventorsdigest.com/wp-content/uploads/2018/01/lazy-sloth-1080x640.gif" width="200" />
+]
+
+
+```{r}
+sumar_xyz <- function(x, y, z) {
+  x + y
+}
+sumar_xyz(1, 2)
+```
+--
+
+### La variable `z` no se evalúa hasta que realmente se necesita 
+
+```{r, error=T}
+sumar_xyz <- function(x, y, z) {
+  x + y + z
+}
+sumar_xyz(1, 2)
+```
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Repaso de funciones
+
+### En otros lenguajes, la evaluación no es *lazy*
+
+```{r, echo=F}
+library(reticulate)
+```
+
+```{python, error = T}
+def sumar_xyz(x, y, z):
+  return(x + y)
+print(sumar_xyz(1, 2))
+```
+
+### `python` utiliza *call by value* (CBV)
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Comentario al margen sobre funciones infix
+
+### En `R` los operadores suma, resta, multiplicación, etc son un tipo especial de función llamada *infix*
+
+```{r, eval=F}
+3 + 2
+3 * 2
+```
+
+--
+
+### Las podemos escribir como *prefix* 
+
+```{r}
+`+`(3, 2)
+`*`(3, 2)
+```
+
+--
+
+### En algunos lenguajes de programación, como python, estos operadores tienen características muy útiles
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Comentario al margen sobre funciones infix
+
+### Podemos cambiar el compartamiento de estas funciones a nuestra conveniencia 
+
+### Vamos a definir que "+" concatene strings
+
+--
+
+```{r}
+
+`+` <- function(x, y) {
+  paste(x , y)
+}
+
+"perro" + "gato"
+
+```
+
+### Ahora "+" concatena strings 😀😀
+
+--
+
+El problema es que hemos perdido la funcionalidad más importante de "+"  
+
+
+```{r}
+3 + 2
+```
+```{r, echo=F}
+rm(`+`)
+```
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Comentario al margen sobre funciones infix
+
+### En general, no es buena idea redefinir este tipo de operadores en el ambiente global
+
+### Pero podemos crear ambientes nuevos en los que este comportamiento sea útil
+
+```{r}
+
+ambiente_esoterico <- env()
+
+ambiente_esoterico$`+` <- function(x, y) {
+  paste(x , y)
+}
+
+eval_tidy(expr("un" + "saludo"), env =  ambiente_esoterico  )
+
+
+
+
+```
+
+--
+
+### Fuera de nuestro ambiente, el operador sigue funcionando normalmente
+
+```{r, error=T}
+"un" + "saludo"
+```
+
+### Esto es una herramienta poderosa para desarrollar paquetes o aplicaciones
+
+
+
+---
+
+
+class: inverse, center, middle
+
+# III. functionals 
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Introducción a funcionales (functionals)
+
+
+*"To become significantly more reliable, code must become more transparent. In particular, nested conditions and loops must be viewed with great suspicion. Complicated control flows confuse programmers. Messy code often hides bugs."*
+
+- Bjarne Stroustrup
+
+--
+
+Una "funcional" (*functional*) es una función que recibe como input otra función
+
+```{r}
+randomise <- function(f) f(runif(10))
+```
+--
+
+`randomise` recibe una función y hace algo con un vector de 10 números aleatorios
+
+```{r}
+randomise(mean)
+randomise(sum)
+randomise(median)
+```
+
+
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Introducción a funcionales (functionals)
+
+Es muy probable que ustedes hayan usados funcionales con `R` base
+
+- `apply`, `lapply`, `sapply` 
+
+--
+
+Los loops tienen mala fama en `R`
+
+--
+
+Típicamente, las funcionales se usan como alternativa a los *loops*
+
+--
+
+Nosotros trabajaremos con el paquete `purrr`
+
+```{r}
+library(purrr)
+```
+
+
+.center[
+<img src="imagenes/purrr.png" width="200" />
+]
+
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Mi primera funcional
+
+Función que calcula el triple del input
+
+```{r}
+triple <- function(x) x * 3
+```
+
+--
+
+`map` lleva el vector `1:3` hacia la función triple
+
+```{r}
+map(1:3, triple)
+```
+
+
+
+.center[
+<img src="https://d33wubrfki0l68.cloudfront.net/f0494d020aa517ae7b1011cea4c4a9f21702df8b/2577b/diagrams/functionals/map.png" width="200" />
+]
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# ¿Qué tienen que ver los mapas?
+
+.center[
+<img src="imagenes/mapa.png" width="400" />
+]
+
+
+--
+
+.center[
+<img src="imagenes/mapear_funcion.png" width="400" />
+]
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Ventajas de `purrr`
+
+Permite abstraernos de lo que hace la función
+
+--
+
+Tenemos claridad de lo que entra y sale de la función 
+
+- `map` devuelve una lista
+- `map_int` devuelve vector de enteros
+- `map_dbl` devuelve vector de reales
+- `map_chr` devuelve vector de characters
+- `map_df` devuelve un dataframe
+
+```{r, error=T}
+triple_chr <- function(x) as.character(x * 3)
+map_int(1:3, triple_chr)
+```
+```{r}
+map_chr(1:3, triple_chr)
+```
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Trabajando con listas anidadas
+
+### La función `mean` se evalúa en cada uno de los vectores de la lista
+
+```{r}
+lista_vectores <- list(1:3, 1:10, 2:9, 1)
+map_dbl(lista_vectores, mean)
+```
+--
+
+### ¿Cómo uso esto en un dataframe?
+
+
+.center[
+<img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" />
+]
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Trabajando con dataframes
+
+### En `R`, los `dataframes` son listas con vectores de la misma longitud
+
+```{r}
+typeof(mtcars)
+```
+--
+
+```{r}
+map_dbl(mtcars, mean)
+```
+
+.center[
+<img src="https://media.giphy.com/media/l3V0dy1zzyjbYTQQM/giphy.gif" width="250" />
+]
+
+
+
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Trabajando con más argumentos
+
+### ¿Qué pasa si queremos usar más argumentos?
+
+```{r}
+lista_vectores <- list(1:3, c(1:10, NA))
+map_dbl(lista_vectores, ~mean(.x, na.rm = TRUE))
+```
+
+`.x` toma el valor de los elementos que están dentro de `lista_vectores` 
+
+El parámetro que varía va a la izquierda y el parámetro fijo a la derecha
+
+--
+
+.center[
+<img src="https://d33wubrfki0l68.cloudfront.net/e1b3536a7556aef348f546a79277125c419a5fdc/0c0a1/diagrams/functionals/map-arg.png" width="400" />
+]
+
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Flujo de trabajo con purrr
+
+### Separamos el dataset usando `year`
+
+```{r}
+library(gapminder)
+gapminder_years <- gapminder %>% 
+  split(gapminder$year)
+```
+
+--
+
+### Estimar un modelo para cada año
+
+
+```{r}
+gapminder_years %>% 
+  map(~lm(lifeExp ~ gdpPercap, data = .x)) %>% # estimar modelo 
+  map(coef) %>% # extraer coeficientes
+  map_dbl(2) # extraer el segundo elemento 
+```
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Usando 2 inputs 
+
+### La función `media_sumar` calcula la media y suma un valor
+
+```{r}
+media_sumar <- function(vector, valor) {
+  mean(vector) + valor
+}
+```
+
+### Queremos que la función itere sobre `lista_vectores` y sobre `valores`
+
+```{r}
+lista_vectores <- list(1:3, 1:5, 2:5)
+valores <- c(2, 3, 8)
+```
+
+--
+
+```{r}
+map2_dbl(lista_vectores, valores, media_sumar)
+```
+
+.center[
+<img src="https://d33wubrfki0l68.cloudfront.net/f5cddf51ec9c243a7c13732b0ce46b0868bf8a31/501a8/diagrams/functionals/map2.png" width="300" />
+]
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Usando *n* cantidad de inputs 
+
+### Necesitamos iterar sobre 3 vectores
+
+```{r}
+media_sumar_dividir <- function(vector, valor_suma, valor_division) {
+  (mean(vector) + valor_suma) / valor_division
+}
+
+lista_vectores <- list(1:3, 1:5, 2:5)
+valores_suma <- c(2, 3, 8)
+valores_division <- c(2, 1, 9)
+```
+
+--
+
+```{r}
+pmap_dbl(list(lista_vectores, valores_suma, valores_division), media_sumar_dividir)
+```
+
+
+.center[
+<img src="https://d33wubrfki0l68.cloudfront.net/2eb2eefe34ad6d114da2a22df42deac8511b4788/5a538/diagrams/functionals/pmap-arg.png" width="300" />
+]
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Remover *side-effects* 
+
+### A veces, nos interesa una función por sus *side-effects*
+
+```{r, eval=T}
+animales <- c("perro", "gato", "elefante")
+map(animales, print)
+```
+--
+
+### `map` está creando una lista y, además, se imprimiendo los valores
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Usando `walk`
+
+
+.center[
+<img src="https://www.musicme.cl/wp-content/uploads/2021/07/ab67616d0000b273347c0a40c1e3f0c890a6d9d6.jpg" width="300" />
+]
+
+--
+
+```{r}
+walk(animales, print)
+```
+
+### Ahora solo estamos imprimiendo los strings
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Usando `walk`
+
+### Necesito escribir archivos  
+
+```{r}
+continentes <- split(gapminder, gapminder$continent)
+```
+
+```{r}
+library(feather)
+files <- paste0("data/", names(continentes), ".feather")
+walk2(continentes, files, write_feather)
+
+```
+
+
+---
+
+
+class: inverse, center, middle
+
+# IV. Programación con dplyr
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Introducción a la programación
+
+### ¿Han intentado programar una función usando dplyr?
+
+--
+
+### Queremos una función que calcule mínimo, máximo, media y mediana 
+
+```{r, error = T}
+calcular_cosas <- function(data, var) {
+  data %>% 
+    summarise(min = min(var),
+              max = max(var),
+              mean = mean(var),
+              median = median(var)
+              )
+}
+
+calcular_cosas(gapminder, pop)
+
+```
+
+
+.center[
+<img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" />
+]
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Introducción a la programación
+
+### Cambiemos un par de cosas
+
+
+```{r}
+library(rlang)
+calcular_cosas <- function(data, var) {
+  enquo_var <- enexpr(var)
+
+  data %>% 
+    summarise(min = min(!!enquo_var),
+              max = max(!!enquo_var),
+              mean = mean(!!enquo_var),
+              median = median(!!enquo_var)
+              )
+}
+
+calcular_cosas(gapminder, pop)
+
+```
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Evaluaciones no estándar
+
+### En `R`, los argumentos pueden ser *evaluados* o *quoted* (¿citados?)  
+
+- evaluados: situación más usual en R
+- quoted: los argumentos son procesados de una manera "atípica" (evaluación no estándar)
+
+--
+
+### Para saber si un argumento es quoted o evaluado, simplemente ejecutamos el argumento fuera de la función
+
+```{r, error=T}
+pop
+```
+--
+
+### Si la ejecución no funciona, el argumento es quoted
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Ejemplos de argumentos quoted y evaluados
+
+### Argumentos evaluados
+
+```{r, eval = F}
+sum(mtcars$am)
+class(mtcars)
+```
+
+--
+
+### Argumentos quoted
+
+```{r, eval=F}
+library(dplyr)
+
+by_cyl <- mtcars %>%
+  summarise(mean = mean(mpg)) 
+
+calcular_cosas(gapminder, pop) # <<
+
+```
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Expresiones
+
+### Evaluar de manera no estándar consiste en atrapar expresiones y evaluarlas en otro momento
+
+```{r}
+expr(x + y)
+
+```
+--
+
+
+
+```{r}
+devolver_expresion <- function(x) {
+  expr(x)
+}
+
+devolver_expresion(a + b)
+```
+### La función `expr` es demasiado literal
+
+--
+
+### Podemos usar enexpr (enrich) 
+
+```{r}
+devolver_expresion <- function(x) {
+  enexpr(x)
+}
+
+devolver_expresion(a + b)
+```
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Expresiones
+
+### Volviendo a nuestra función `calcular_cosas`...
+ 
+```{r, eval=F}
+calcular_cosas <- function(data, var) {
+  enquo_var <- enexpr(var) #<<
+
+  data %>% 
+    summarise(min = min(!!enquo_var),
+              max = max(!!enquo_var),
+              mean = mean(!!enquo_var),
+              median = median(!!enquo_var)
+              )
+}
+
+```
+
+--
+
+### Ya sabemos qué significa la primera línea
+
+
+--
+
+
+```{r}
+calcular_cosas <- function(data, var) {
+  enquo_var <- enexpr(var) 
+  return(enquo_var)
+}
+calcular_cosas(var = pop)
+```
+
+
+
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Expresiones
+
+### ¿Qué significa esto `min(!!enquo_var)` ?
+
+<img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" />
+
+--
+
+### Una vez que la expresión se "congela", es necesario evaluarla
+
+### El operador bang-bang (!!) hace *unquoting*
+
+--
+
+```{r}
+calcular_cosas <- function(data, var) {
+  enquo_var <- enexpr(var) 
+
+  data %>% 
+    summarise(min = min(!!enquo_var)) #<<
+}
+
+calcular_cosas(gapminder, pop)
+
+```
+
+
+### Estamos evaluando la variable enquo_var
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Usar el código del usario 
+
+### ¿Qué pasa si queremos una función que use el nombre de un parámetro, para nombrar una variable?
+
+
+### Idea número 1
+
+```{r}
+
+calcular_cosas <- function(data, var) {
+  enquo_var <- enexpr(var) 
+
+  data %>% 
+    summarise(var = min(!!enquo_var)) #<<
+}
+calcular_cosas(gapminder, pop)
+
+
+
+```
+
+--
+
+### `R` fue demasiado literal
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Usar el código del usario 
+
+### Idea número 2
+
+```{r, error=T}
+calcular_cosas <- function(data, var) {
+  enquo_var <- enexpr(var) 
+
+  data %>% 
+    summarise(!!enquo_var = min(!!enquo_var)) 
+}
+calcular_cosas(gapminder, pop)
+```
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Operador :=
+
+### Debemos resolver el problema con un nuevo operador
+
+```{r}
+calcular_cosas <- function(data, var) {
+  enquo_var <- enexpr(var) 
+
+  data %>% 
+    summarise(!!enquo_var := min(!!enquo_var)) #<<
+}
+calcular_cosas(gapminder, pop)
+```
+--
+
+### Si queremos entregar un string como input podemos usar `sym` 
+
+### `sym` convierte un string en un símbolo. Esta operación se denomina *parsing*
+
+```{r}
+calcular_cosas <- function(data, var) {
+  enquo_var <- sym(var)
+  data %>% 
+    summarise(!!enquo_var  := min(!!enquo_var)) #<<
+}
+calcular_cosas(gapminder, "pop")
+
+```
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Parsing
+
+### Otra opción es usar la función `parse_expr` de `rlang`
+
+```{r}
+calcular_cosas <- function(data, var) {
+  enquo_var <- parse_expr(var)  #<<
+  data %>% 
+    summarise(!!enquo_var  := min(!!enquo_var))
+}
+calcular_cosas(gapminder, "pop")
+
+```
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Nueva sintaxis
+
+### Hace un tiempo existe el operador embrace `{{}}`
+
+```{r}
+calcular_cosas <- function(data, var) {
+  data %>% 
+    summarise({{var}} := min({{var}}))
+}
+calcular_cosas(gapminder, pop)
+```
+
+### Nos evita dar una vuelta larga, pero no habríamos aprendido sobre evaluaciones no estándar 🤓
+
+
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Aplicación en purrr
+
+### Podemos usar todas estas ideas en el paquete purrr
+
+### `imap` permite iterar sobre una lista y sus nombres
+
+```{r}
+continents <- split(gapminder, gapminder$continent)
+
+```
+
+
+```{r}
+continents2 <- continents %>% 
+  
+  imap(~mutate(.x, !!sym(.y) := log10(pop))  )
+
+models <- continents %>% 
+  map(~lm(lifeExp ~ gdpPercap, data = .x)) %>% # estimar modelo 
+  map(coef) %>% # extraer coeficientes
+  map_dbl(2)
+
+continents2[[1]] %>% names()
+continents2[[2]] %>% names()
+
+names(gapminder)
+
+```
+
+
+
+---
+
+class: center, middle
+
+.linea-superior[]
+.linea-inferior[]
+
+<img src="imagenes/logo_portada2.png" width="200" />
+
+## Capacitación en R avanzado
+
+## Proyecto Estratégico Servicios Compartidos para la Producción Estadística
+
+### Diciembre 2021
