@@ -4,7 +4,7 @@
     <title>Capacitación paquete calidad</title>
     <meta charset="utf-8" />
     <meta name="author" content="" />
-    <meta name="date" content="2022-07-15" />
+    <meta name="date" content="2022-07-18" />
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
   <body>
@@ -48,13 +48,547 @@ background-position: 100% 0%
 
 
 
+---
+
+
+class: inverse, center, middle
+
+# I. Programación con dplyr
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Introducción a la programación con dplyr
+
+### ¿Han intentado programar una función usando dplyr?
+
+--
+
+### Queremos una función que calcule mínimo, máximo, media y mediana en un `dataframe` 
+
+
+```r
+library(gapminder)
+calcular_cosas &lt;- function(data, var) {
+  data %&gt;% 
+    summarise(min = min(var),
+              max = max(var),
+              mean = mean(var),
+              median = median(var)
+              )
+}
+
+calcular_cosas(gapminder, pop)
+```
+
+```
+## Error in `h()`:
+## ! Problem with `summarise()` input `min`.
+## x objeto 'pop' no encontrado
+## i Input `min` is `min(var)`.
+```
+
+
+.center[
+&lt;img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" /&gt;
+]
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Introducción a la programación con dplyr
+
+### Cambiemos un par de cosas
+
+
+
+```r
+library(rlang)
+calcular_cosas &lt;- function(data, var) {
+* enquo_var &lt;- enexpr(var)
+
+  data %&gt;% 
+*   summarise(min = min(!!enquo_var),
+              max = max(!!enquo_var),
+              mean = mean(!!enquo_var),
+              median = median(!!enquo_var)
+              )
+}
+calcular_cosas(gapminder, pop)
+```
+
+```
+## # A tibble: 1 x 4
+##     min        max      mean   median
+##   &lt;int&gt;      &lt;int&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 60011 1318683096 29601212. 7023596.
+```
+
+--
+
+### Durante este taller revisaremos `!!` y `enexpr`
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Evaluaciones no estándar
+
+### En `R`, los argumentos pueden ser *evaluados* o *quoted* (¿citados?)  
+
+- evaluados: situación más usual en R
+- quoted: los argumentos son procesados de una manera "atípica" (evaluación no estándar)
+
+--
+
+### Para saber si un argumento es quoted o evaluado, simplemente ejecutamos el argumento fuera de la función
+
+
+```r
+pop
+```
+
+```
+## Error in eval(expr, envir, enclos): objeto 'pop' no encontrado
+```
+--
+
+### Si la ejecución no funciona, el argumento es quoted
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Ejemplos de argumentos quoted y evaluados
+
+### Argumentos evaluados
+
+
+```r
+sum(mtcars$am)
+class(mtcars)
+```
+
+--
+
+### Argumentos quoted
+
+
+```r
+library(dplyr)
+
+by_cyl &lt;- mtcars %&gt;%
+  summarise(mean = mean(mpg)) 
+
+*calcular_cosas(gapminder, pop)
+```
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Expresiones
+
+### Evaluar de manera no estándar consiste en atrapar expresiones y evaluarlas en otro momento
+
+
+```r
+expr(x + y)
+```
+
+```
+## x + y
+```
+--
+
+### `expr` ha "encapsulado" la expresión `x + y`
+
+--
+
+
+
+```r
+devolver_expresion &lt;- function(x) {
+  expr(x)
+}
+devolver_expresion(a + b)
+```
+
+```
+## x
+```
+### La función `expr` es demasiado literal
+
+--
+
+### Podemos usar enexpr (enrich) 
+
+
+```r
+devolver_expresion &lt;- function(x) {
+  enexpr(x)
+}
+devolver_expresion(a + b)
+```
+
+```
+## a + b
+```
+
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Expresiones
+
+### Volviendo a nuestra función `calcular_cosas`...
+ 
+
+```r
+calcular_cosas &lt;- function(data, var) {
+* enquo_var &lt;- enexpr(var)
+
+  data %&gt;% 
+    summarise(min = min(!!enquo_var),
+              max = max(!!enquo_var),
+              mean = mean(!!enquo_var),
+              median = median(!!enquo_var)
+              )
+}
+```
+
+--
+
+### Ya sabemos qué significa la primera línea
+
+
+--
+
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- enexpr(var) 
+  return(enquo_var)
+}
+calcular_cosas(var = pop)
+```
+
+```
+## pop
+```
+
+
+
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Expresiones
+
+### ¿Qué significa esto `min(!!enquo_var)` ?
+
+
+.center[
+&lt;img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" /&gt;
+]
+
+
+--
+
+### Una vez que la expresión se "congela", es necesario evaluarla
+
+### El operador bang-bang (!!) hace *unquoting*
+
+--
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- enexpr(var) 
+
+  data %&gt;% 
+*   summarise(min = min(!!enquo_var))
+}
+calcular_cosas(gapminder, pop)
+```
+
+```
+## # A tibble: 1 x 1
+##     min
+##   &lt;int&gt;
+## 1 60011
+```
+
+### Estamos evaluando la variable enquo_var
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Usar el código del usuario 
+
+### ¿Qué pasa si queremos una función que use el nombre de un parámetro, para nombrar una variable?
+
+
+### Idea número 1
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- enexpr(var) 
+
+  data %&gt;% 
+*   summarise(var = min(!!enquo_var))
+}
+calcular_cosas(gapminder, pop)
+```
+
+```
+## # A tibble: 1 x 1
+##     var
+##   &lt;int&gt;
+## 1 60011
+```
+
+--
+
+### Funciona, pero `R` fue demasiado literal. Usó el nombre "var"
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Usar el código del usuario 
+
+### Idea número 2: evaluar *enquo_var* 
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- enexpr(var) 
+
+  data %&gt;% 
+*   summarise(!!enquo_var = min(!!enquo_var))
+}
+calcular_cosas(gapminder, pop)
+```
+
+```
+## Error: &lt;text&gt;:5:27: inesperado '='
+## 4:   data %&gt;% 
+## 5:     summarise(!!enquo_var =
+##                              ^
+```
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Operador :=
+
+### Debemos resolver el problema con un nuevo operador
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- enexpr(var) 
+
+  data %&gt;% 
+*   summarise(!!enquo_var := min(!!enquo_var))
+}
+calcular_cosas(gapminder, pop)
+```
+
+```
+## # A tibble: 1 x 1
+##     pop
+##   &lt;int&gt;
+## 1 60011
+```
+--
+
+### Si queremos entregar un string como input podemos usar `sym` 
+
+### `sym` convierte un string en un símbolo. Esta operación se denomina *parsing*
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- sym(var)
+  data %&gt;% 
+*   summarise(!!enquo_var  := min(!!enquo_var))
+}
+calcular_cosas(gapminder, "pop")
+```
+
+```
+## # A tibble: 1 x 1
+##     pop
+##   &lt;int&gt;
+## 1 60011
+```
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Parsing
+
+### Otra opción es usar la función `parse_expr` de `rlang`
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+* enquo_var &lt;- parse_expr(var)
+  data %&gt;% 
+    summarise(!!enquo_var  := min(!!enquo_var))
+}
+calcular_cosas(gapminder, "pop")
+```
+
+```
+## # A tibble: 1 x 1
+##     pop
+##   &lt;int&gt;
+## 1 60011
+```
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Nueva sintaxis
+
+### Hace un tiempo existe el operador embrace `{{}}`
+
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  data %&gt;% 
+*   summarise({{var}} := min({{var}}))
+}
+calcular_cosas(gapminder, pop)
+```
+
+```
+## # A tibble: 1 x 1
+##     pop
+##   &lt;int&gt;
+## 1 60011
+```
+
+--
+
+### Este operador nos hubiera evitado la vuelta que dimo, pero no habríamos aprendido sobre evaluaciones no estándar 
+
+.center[
+# 🤓
+
+]
+
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Ejercicio dplyr
+
+Escriba una función llamada `count_something` para trabajar con la tabla `gapminder`. `count_something` debe agrupar por una variable y sumar otra. Por ejemplo, `count_something(gapminder, continent, pop)` debería devolver lo siguiente:
+
+
+```
+## # A tibble: 5 x 2
+##   continent           n
+##   &lt;fct&gt;           &lt;dbl&gt;
+## 1 Africa     6187585961
+## 2 Americas   7351438499
+## 3 Asia      30507333901
+## 4 Europe     6181115304
+## 5 Oceania     212992136
+```
+
+--
+
+
+```r
+count_something &lt;- function(data, group_var, var) {
+  data %&gt;% 
+    group_by(!!enexpr(group_var)) %&gt;% 
+    summarise(n = sum(!!enexpr(var)))
+}
+```
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Ejercicio dplyr (continuación)
+
+Crea una función `plot_table` que acompañe a `count_something`. `plot_table` debe recibir la tabla creada por `count_something` y devolver un gráfico de barras. Es importante que la función reciba el nombre de la variable x y la variable y. Además, debe existir un parámetro para agregar un título al gráfico. El llamado a la función `plot_table(table, continent, n,  "Población en cada continente" )` debería tener este resultado 
+
+.pull-left[
+
+![](purrr_files/figure-html/unnamed-chunk-20-1.png)&lt;!-- --&gt;
+
+]
+
+--
+
+.pull-right[
+
+
+```r
+tabla &lt;- count_something(gapminder, continent, pop)
+plot_table &lt;- function(table, x_var, y_var,  input_title ) {
+  
+  ggplot(table, aes(x = !!enexpr(x_var), y = !!enexpr(y_var) )) +
+    geom_bar(stat = "identity") +
+    labs(title = input_title)
+}
+plot_table(table, continent, n,  "Población en cada continente" )
+```
+
+]
+
+
 
 ---
 
 
 class: inverse, center, middle
 
-# III. functionals 
+# II. functionals 
 
 ---
 
@@ -87,7 +621,7 @@ randomise(mean)
 ```
 
 ```
-## [1] 0.3676359
+## [1] 0.5594844
 ```
 
 ```r
@@ -95,7 +629,7 @@ randomise(sum)
 ```
 
 ```
-## [1] 5.201267
+## [1] 5.198108
 ```
 
 ```r
@@ -103,7 +637,7 @@ randomise(median)
 ```
 
 ```
-## [1] 0.5453601
+## [1] 0.8766153
 ```
 
 
@@ -124,7 +658,7 @@ Es muy probable que ustedes hayan usados funcionales con `R` base
 
 --
 
-Los loops tienen mala fama en `R`
+Los *loops* tienen mala fama en `R`
 
 --
 
@@ -225,6 +759,7 @@ Tenemos claridad de lo que entra y sale de la función
 - `map_chr` devuelve vector de characters
 - `map_df` devuelve un dataframe
 
+-- 
 
 ```r
 triple_chr &lt;- function(x) as.character(x * 3)
@@ -514,465 +1049,44 @@ walk2(continentes, files, write_feather)
 ```
 
 
----
-
-
-class: inverse, center, middle
-
-# IV. Programación con dplyr
-
-
----
-
-background-image: url("imagenes/fondo2.PNG")
-background-size: contain;
-background-position: 100% 0%
-
-# Introducción a la programación con dplyr
-
-### ¿Han intentado programar una función usando dplyr?
-
---
-
-### Queremos una función que calcule mínimo, máximo, media y mediana 
-
-
-```r
-calcular_cosas &lt;- function(data, var) {
-  data %&gt;% 
-    summarise(min = min(var),
-              max = max(var),
-              mean = mean(var),
-              median = median(var)
-              )
-}
-
-calcular_cosas(gapminder, pop)
-```
-
-```
-## Error in `h()`:
-## ! Problem with `summarise()` input `min`.
-## x objeto 'pop' no encontrado
-## i Input `min` is `min(var)`.
-```
-
-
-.center[
-&lt;img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" /&gt;
-]
-
-
----
-
-background-image: url("imagenes/fondo2.PNG")
-background-size: contain;
-background-position: 100% 0%
-
-# Introducción a la programación con dplyr
-
-### Cambiemos un par de cosas
-
-
-
-```r
-library(rlang)
-calcular_cosas &lt;- function(data, var) {
-  enquo_var &lt;- enexpr(var)
-
-  data %&gt;% 
-    summarise(min = min(!!enquo_var),
-              max = max(!!enquo_var),
-              mean = mean(!!enquo_var),
-              median = median(!!enquo_var)
-              )
-}
-
-calcular_cosas(gapminder, pop)
-```
-
-```
-## # A tibble: 1 x 4
-##     min        max      mean   median
-##   &lt;int&gt;      &lt;int&gt;     &lt;dbl&gt;    &lt;dbl&gt;
-## 1 60011 1318683096 29601212. 7023596.
-```
-
 
 ---
 background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Evaluaciones no estándar
+# Ejercicio: apliquemos todo
 
-### En `R`, los argumentos pueden ser *evaluados* o *quoted* (¿citados?)  
-
-- evaluados: situación más usual en R
-- quoted: los argumentos son procesados de una manera "atípica" (evaluación no estándar)
-
---
-
-### Para saber si un argumento es quoted o evaluado, simplemente ejecutamos el argumento fuera de la función
+Tenemos un listado de `dataframes` separados por año  
 
 
 ```r
-pop
+gapminder_list &lt;- split(gapminder, gapminder$year)
 ```
+Retomemos nuestras funciones `count_something` y `plot_table`. 
 
-```
-## Error in eval(expr, envir, enclos): objeto 'pop' no encontrado
-```
---
-
-### Si la ejecución no funciona, el argumento es quoted
-
-
----
-background-image: url("imagenes/fondo2.PNG")
-background-size: contain;
-background-position: 100% 0%
-
-# Ejemplos de argumentos quoted y evaluados
-
-### Argumentos evaluados
-
-
-```r
-sum(mtcars$am)
-class(mtcars)
-```
-
---
-
-### Argumentos quoted
-
-
-```r
-library(dplyr)
-
-by_cyl &lt;- mtcars %&gt;%
-  summarise(mean = mean(mpg)) 
-
-calcular_cosas(gapminder, pop) # &lt;&lt;
-```
-
----
-background-image: url("imagenes/fondo2.PNG")
-background-size: contain;
-background-position: 100% 0%
-
-# Expresiones
-
-### Evaluar de manera no estándar consiste en atrapar expresiones y evaluarlas en otro momento
-
-
-```r
-expr(x + y)
-```
-
-```
-## x + y
-```
---
-
-
-
-
-```r
-devolver_expresion &lt;- function(x) {
-  expr(x)
-}
-
-devolver_expresion(a + b)
-```
-
-```
-## x
-```
-### La función `expr` es demasiado literal
-
---
-
-### Podemos usar enexpr (enrich) 
-
-
-```r
-devolver_expresion &lt;- function(x) {
-  enexpr(x)
-}
-
-devolver_expresion(a + b)
-```
-
-```
-## a + b
-```
-
-
-
----
-
-background-image: url("imagenes/fondo2.PNG")
-background-size: contain;
-background-position: 100% 0%
-
-# Expresiones
-
-### Volviendo a nuestra función `calcular_cosas`...
- 
-
-```r
-calcular_cosas &lt;- function(data, var) {
-* enquo_var &lt;- enexpr(var)
-
-  data %&gt;% 
-    summarise(min = min(!!enquo_var),
-              max = max(!!enquo_var),
-              mean = mean(!!enquo_var),
-              median = median(!!enquo_var)
-              )
-}
-```
-
---
-
-### Ya sabemos qué significa la primera línea
-
-
---
-
-
-
-```r
-calcular_cosas &lt;- function(data, var) {
-  enquo_var &lt;- enexpr(var) 
-  return(enquo_var)
-}
-calcular_cosas(var = pop)
-```
-
-```
-## pop
-```
-
-
-
-
-
----
-background-image: url("imagenes/fondo2.PNG")
-background-size: contain;
-background-position: 100% 0%
-
-# Expresiones
-
-### ¿Qué significa esto `min(!!enquo_var)` ?
-
-
-.center[
-&lt;img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" /&gt;
-]
-
-
---
-
-### Una vez que la expresión se "congela", es necesario evaluarla
-
-### El operador bang-bang (!!) hace *unquoting*
+La idea es usar `purrr` con el listado que tenemos y generar un gráfico para cada año en el que se muestre la población de cada continente. 
 
 --
 
 
 ```r
-calcular_cosas &lt;- function(data, var) {
-  enquo_var &lt;- enexpr(var) 
-
-  data %&gt;% 
-*   summarise(min = min(!!enquo_var))
-}
-calcular_cosas(gapminder, pop)
-```
-
-```
-## # A tibble: 1 x 1
-##     min
-##   &lt;int&gt;
-## 1 60011
-```
-
-### Estamos evaluando la variable enquo_var
-
----
-background-image: url("imagenes/fondo2.PNG")
-background-size: contain;
-background-position: 100% 0%
-
-# Usar el código del usuario 
-
-### ¿Qué pasa si queremos una función que use el nombre de un parámetro, para nombrar una variable?
-
-
-### Idea número 1
-
-
-```r
-calcular_cosas &lt;- function(data, var) {
-  enquo_var &lt;- enexpr(var) 
-
-  data %&gt;% 
-*   summarise(var = min(!!enquo_var))
-}
-calcular_cosas(gapminder, pop)
-```
-
-```
-## # A tibble: 1 x 1
-##     var
-##   &lt;int&gt;
-## 1 60011
+plots_by_year &lt;- gapminder_list %&gt;% 
+  map(~count_something(.x, continent, pop)) %&gt;% 
+  map(~plot_table(.x, continent, n, "Población mundial, según continente" ))
 ```
 
 --
 
-### `R` fue demasiado literal. Usó el nombre "var"
-
----
-
-background-image: url("imagenes/fondo2.PNG")
-background-size: contain;
-background-position: 100% 0%
-
-# Usar el código del usuario 
-
-### Idea número 2
-
 
 ```r
-calcular_cosas &lt;- function(data, var) {
-  enquo_var &lt;- enexpr(var) 
-
-  data %&gt;% 
-    summarise(!!enquo_var = min(!!enquo_var)) 
-}
-calcular_cosas(gapminder, pop)
+plots_by_year &lt;- gapminder_list %&gt;% 
+  map(count_something, continent, pop) %&gt;% 
+  map(plot_table, continent, n, "Población mundial, según continente" )
 ```
 
-```
-## Error: &lt;text&gt;:5:27: inesperado '='
-## 4:   data %&gt;% 
-## 5:     summarise(!!enquo_var =
-##                              ^
-```
-
----
-
-background-image: url("imagenes/fondo2.PNG")
-background-size: contain;
-background-position: 100% 0%
-
-# Operador :=
-
-### Debemos resolver el problema con un nuevo operador
 
 
-```r
-calcular_cosas &lt;- function(data, var) {
-  enquo_var &lt;- enexpr(var) 
-
-  data %&gt;% 
-*   summarise(!!enquo_var := min(!!enquo_var))
-}
-calcular_cosas(gapminder, pop)
-```
-
-```
-## # A tibble: 1 x 1
-##     pop
-##   &lt;int&gt;
-## 1 60011
-```
---
-
-### Si queremos entregar un string como input podemos usar `sym` 
-
-### `sym` convierte un string en un símbolo. Esta operación se denomina *parsing*
-
-
-```r
-calcular_cosas &lt;- function(data, var) {
-  enquo_var &lt;- sym(var)
-  data %&gt;% 
-*   summarise(!!enquo_var  := min(!!enquo_var))
-}
-calcular_cosas(gapminder, "pop")
-```
-
-```
-## # A tibble: 1 x 1
-##     pop
-##   &lt;int&gt;
-## 1 60011
-```
-
----
-background-image: url("imagenes/fondo2.PNG")
-background-size: contain;
-background-position: 100% 0%
-
-# Parsing
-
-### Otra opción es usar la función `parse_expr` de `rlang`
-
-
-```r
-calcular_cosas &lt;- function(data, var) {
-* enquo_var &lt;- parse_expr(var)
-  data %&gt;% 
-    summarise(!!enquo_var  := min(!!enquo_var))
-}
-calcular_cosas(gapminder, "pop")
-```
-
-```
-## # A tibble: 1 x 1
-##     pop
-##   &lt;int&gt;
-## 1 60011
-```
----
-background-image: url("imagenes/fondo2.PNG")
-background-size: contain;
-background-position: 100% 0%
-
-# Nueva sintaxis
-
-### Hace un tiempo existe el operador embrace `{{}}`
-
-
-```r
-calcular_cosas &lt;- function(data, var) {
-  data %&gt;% 
-    summarise({{var}} := min({{var}}))
-}
-calcular_cosas(gapminder, pop)
-```
-
-```
-## # A tibble: 1 x 1
-##     pop
-##   &lt;int&gt;
-## 1 60011
-```
-
---
-
-### Este operador nos hubiera evitado la vuelta que dimo, pero no habríamos aprendido sobre evaluaciones no estándar 
-
-.center[
-# 🤓
-
-]
 
 
 
@@ -982,6 +1096,56 @@ background-size: contain;
 background-position: 100% 0%
 
 # Tarea para la 🏠
+
+**Ejercicio 1**
+
+El siguiente código genera un resultado muy similar al del último ejercicio revisado en la clase. La diferencia es que la implementación es mediante un ciclo *for*. Adicionalmente, se agrega una funcionalidad que agrega al título el año correspondiente.     
+
+
+```r
+gapminder_list &lt;- split(gapminder, gapminder$year)
+plots &lt;- list(vector(length = length(gapminder_list) ))
+i &lt;- 1
+for (plot in gapminder_list) {
+  table &lt;- count_something(plot, continent, pop)
+  plots[[i]] &lt;- plot_table(table, continent, n, paste("Población mundial, según continente. Año", plot$year[1] )  )
+  i &lt;-  i + 1
+}
+```
+
+La tarea consiste en llegar al mismo resultado, pero utilizando únicamente las herramientas de `purrr`. 
+
+**Pista**: La función `imap` puede ser de gran ayuda 
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Tarea para la 🏠
+
+**Ejercicio 2**
+
+Modifica la función `plot_table` para que el año del gráfico aparezca en el subtítulo y no en el título. La función modificada debería recibir un parámetro extra, que permita agregar el año.
+
+
+**Ejercicio 3 (solo para valientes)**
+
+El siguiente *for* anidado genera pares de *x* e *y*. El ejercicio consiste en escribir el código con una sintaxis de `purrr`
+
+Es posible que la sintaxis llegue a ser un poco confusa para este caso. La próxima semana reflexionaremos sobre la pertinencia de `purrr` para algunas tareas.  
+
+
+```r
+for (x in 1:5) {
+  for (y in 2:6){
+    print(paste(x, y))
+  }
+}
+```
+
+
+
 
 ---
 
