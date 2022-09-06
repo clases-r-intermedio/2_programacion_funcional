@@ -22,13 +22,11 @@ class: center, middle
 
 <img src="imagenes/logo_portada2.png" width="200" />
 
-## Capacitación en R intermedio
+## Capacitación en R y herramientas de productividad - nivel intermedio
 
-## NSE y purrr
+## Proyecto Estratégico Metodologías y Ciencia de Datos para la Producción Estadística
 
-## Proyecto Estratégico Servicios Compartidos para la Producción Estadística
-
-### Agosto 2022
+### Septiembre 2022
 
 ```{r setup, include=FALSE}
 options(htmltools.dir.version = TRUE)
@@ -48,7 +46,7 @@ background-image: url("imagenes/fondo2.PNG")
 background-size: contain;
 background-position: 100% 0%
 
-# Estructura del taller
+# Estructura de la clase
 
 **Contenidos de la clase**
 
@@ -84,6 +82,7 @@ background-position: 100% 0%
 
 ```{r, error = T}
 library(gapminder)
+library(tidyverse)
 calcular_cosas <- function(data, var) {
   data %>% 
     summarise(min = min(var),
@@ -206,18 +205,12 @@ expr(x + y)
 
 --
 
-
 ```{r}
 devolver_expresion <- function(x) {
-  expr(x)
-}
+  expr(x)}
 devolver_expresion(a + b)
 ```
-### La función `expr` es demasiado literal
-
---
-
-### Podemos usar enexpr (enrich) 
+### La función `expr` es demasiado literal. Podemos usar enexpr (enrich) 
 
 ```{r}
 devolver_expresion <- function(x) {
@@ -279,10 +272,11 @@ background-position: 100% 0%
 
 # Expresiones
 
+.pull-left[
 ### ¿Qué significa esto `min(!!enquo_var)` ?
+]
 
-
-.center[
+.pull-right[
 <img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" />
 ]
 
@@ -370,27 +364,25 @@ background-position: 100% 0%
 ```{r}
 calcular_cosas <- function(data, var) {
   enquo_var <- enexpr(var) 
-
   data %>% 
-    summarise(!!enquo_var := min(!!enquo_var)) #<<
-}
+    summarise(!!enquo_var := min(!!enquo_var))} #<<
 calcular_cosas(gapminder, pop)
 ```
 --
 
-### Si queremos entregar un string como input podemos usar `sym` 
+Si queremos entregar un string como input podemos usar `sym` 
 
-### `sym` convierte un string en un símbolo. Esta operación se denomina *parsing*
+`sym` convierte un string en un símbolo. Esta operación se denomina *parsing*
 
 ```{r}
 calcular_cosas <- function(data, var) {
   enquo_var <- sym(var)
   data %>% 
-    summarise(!!enquo_var  := min(!!enquo_var)) #<<
-}
+    summarise(!!enquo_var  := min(!!enquo_var))} #<<
 calcular_cosas(gapminder, "pop")
 
 ```
+
 
 ---
 background-image: url("imagenes/fondo2.PNG")
@@ -398,6 +390,7 @@ background-size: contain;
 background-position: 100% 0%
 
 # Parsing
+
 
 ### Otra opción es usar la función `parse_expr` de `rlang`
 
@@ -429,7 +422,7 @@ calcular_cosas(gapminder, pop)
 
 --
 
-### Este operador nos hubiera evitado la vuelta que dimo, pero no habríamos aprendido sobre evaluaciones no estándar 
+### Este operador nos hubiera evitado la vuelta que dimos, pero no habríamos aprendido sobre evaluaciones no estándar 
 
 .center[
 # 🤓
@@ -445,15 +438,17 @@ background-position: 100% 0%
 
 # Ejercicio dplyr
 
-Escriba una función llamada `count_something` para trabajar con la tabla `gapminder`. `count_something` debe agrupar por una variable y sumar otra. Por ejemplo, `count_something(gapminder, continent, pop)` debería devolver lo siguiente:
+Trabajaremos con los datos de Casen. Escriba una función llamada `count_something` que agrupe por una variable y sume otra. Por ejemplo, `count_something(casen, region, ytotcor)` debería devolver lo siguiente:
 
 ```{r,echo=FALSE}
+casen <- read_feather("data/casen_2020_edit.feather")
+
 count_something <- function(data, group_var, var) {
   data %>% 
     group_by(!!enexpr(group_var)) %>% 
     summarise(n = sum(!!enexpr(var)))
 }
-count_something(gapminder, continent, pop)
+count_something(casen, region, ytotcor) %>% slice(1:3)
 
 ```
 
@@ -476,13 +471,13 @@ background-position: 100% 0%
 
 # Ejercicio dplyr (continuación)
 
-Crea una función `plot_table` que acompañe a `count_something`. `plot_table` debe recibir la tabla creada por `count_something` y devolver un gráfico de barras. Es importante que la función reciba el nombre de la variable x y la variable y. Además, debe existir un parámetro para agregar un título al gráfico. El llamado a la función `plot_table(table, continent, n,  "Población en cada continente" )` debería tener este resultado 
+Crea una función `plot_table` que acompañe a `count_something`. `plot_table` debe recibir la tabla creada por `count_something` y devolver un gráfico de barras. Es importante que la función reciba el nombre de la variable x y la variable y. Además, debe existir un parámetro para agregar un título al gráfico. El llamado a la función `plot_table(table, continent, n,  "Total del ingreso por región" )` debería tener este resultado 
 
 .pull-left[
 
 ```{r, echo=F, fig.height=5, fig.width=4.5}
 
-tabla <- count_something(gapminder, continent, pop)
+tabla <- count_something(casen, region, ytotcor)
 
 plot_table <- function(table, x_var, y_var,  input_title ) {
   ggplot(table, aes(x = !!enexpr(x_var), y = !!enexpr(y_var) )) +
@@ -490,7 +485,7 @@ plot_table <- function(table, x_var, y_var,  input_title ) {
     labs(title = input_title)
 }
 
-plot_table(tabla, continent, n,  "Población en cada continente" )
+plot_table(tabla, region, n,  "Total del ingreso por región" )
 
 
 
@@ -503,14 +498,14 @@ plot_table(tabla, continent, n,  "Población en cada continente" )
 .pull-right[
 
 ```{r, eval=F}
-tabla <- count_something(gapminder, continent, pop)
+tabla <- count_something(casen, region, ytotcor)
 plot_table <- function(table, x_var, y_var,  input_title ) {
-  
   ggplot(table, aes(x = !!enexpr(x_var), y = !!enexpr(y_var) )) +
     geom_bar(stat = "identity") +
     labs(title = input_title)
 }
-plot_table(table, continent, n,  "Población en cada continente" )
+
+plot_table(tabla, region, n,  "Total del ingreso por región" )
 
 ```
 
@@ -567,7 +562,7 @@ background-position: 100% 0%
 
 # Introducción a funcionales (functionals)
 
-Es muy probable que ustedes hayan usados funcionales con `R` base
+Es muy probable que ustedes hayan usado funcionales con `R` base
 
 - `apply`, `lapply`, `sapply` 
 
@@ -601,18 +596,18 @@ background-position: 100% 0%
 
 # Mi primera funcional
 
-Función que calcula el triple del input
+Función que calcula el cuadrado del input
 
 ```{r}
-triple <- function(x) x * 3
+cuadrado <- function(x) x ** 2
 ```
 
 --
 
-`map` lleva el vector `1:3` hacia la función triple
+`map` lleva el vector `1:3` hacia la función cuadrado
 
 ```{r}
-map(1:3, triple)
+map(1:3, cuadrado)
 ```
 
 
@@ -660,7 +655,8 @@ Tenemos claridad de lo que entra y sale de la función
 - `map_chr` devuelve vector de characters
 - `map_df` devuelve un dataframe
 
--- 
+ 
+
 ```{r, error=T}
 triple_chr <- function(x) as.character(x * 3)
 map_int(1:3, triple_chr)
@@ -927,6 +923,12 @@ background-position: 100% 0%
 
 # Tarea para la 🏠
 
+Las tareas deberán ser entregadas a través de git. En el repositorio de gitlab que hemos estado usando existe una rama llamada tareas, en la cual hay una carpeta para cada clase. Hagan *fetch* (o *pull*) de esa rama y empujen sus tareas a la carpeta correspondiente. La estructura del archivo debe ser la siguiente: nombre_apellido1_apellido2.R
+
+La url es la siguiente: https://gitlab.com/inesscc/demostracion_git.git
+
+**Nota: Es deseable que las tareas solo contengan funciones**
+
 **Ejercicio 1**
 
 El siguiente código genera un resultado muy similar al del último ejercicio revisado en la clase. La diferencia es que la implementación es mediante un ciclo *for*. Adicionalmente, se agrega una funcionalidad que agrega al título el año correspondiente.     
@@ -943,7 +945,7 @@ for (plot in gapminder_list) {
 
 ```
 
-La tarea consiste en llegar al mismo resultado, pero utilizando únicamente las herramientas de `purrr`. 
+La tarea consiste en llegar al mismo resultado, pero utilizando únicamente las herramientas de `purrr`. **Crea una función llamada plot_with_purrr que reciba una lista de tablas y devuelva una lista de gráficos** 
 
 **Pista**: La función `imap` puede ser de gran ayuda 
 
@@ -959,18 +961,23 @@ background-position: 100% 0%
 Modifica la función `plot_table` para que el año del gráfico aparezca en el subtítulo y no en el título. La función modificada debería recibir un parámetro extra, que permita agregar el año.
 
 
-**Ejercicio 3 (solo para valientes)**
+**Ejercicio 3**
 
-El siguiente *for* anidado genera pares de *x* e *y*. El ejercicio consiste en escribir el código con una sintaxis de `purrr`
+El siguiente *for* anidado genera pares de *x* e *y*. El ejercicio consiste en escribir una función llamada **nested_map** que utilice una sintaxis de `purrr`. La función debe recibir dos vectores numéricos (de igual o distinto largo) e imprimir pares de número. 
 
-Es posible que la sintaxis llegue a ser un poco confusa para este caso. La próxima semana reflexionaremos sobre la pertinencia de `purrr` para algunas tareas.  
+Es posible que la sintaxis llegue a ser un poco confusa. Reflexiona sobre la pertinencia de `purrr` para tareas de este tipo.  
+
 
 ```{r, eval=F}
-for (x in 1:5) {
-  for (y in 2:6){
-    print(paste(x, y))
+nested_for <- function(v1, v2) {
+  for (x in v1) {
+    for (y in v2){
+      print(paste(x, y))
+    }
   }
 }
+
+nested_for(1:3, 5:8)
 ```
 
 
@@ -985,10 +992,8 @@ class: center, middle
 
 <img src="imagenes/logo_portada2.png" width="200" />
 
-## Capacitación en R intermedio
+## Capacitación en R y herramientas de productividad - nivel intermedio
 
-## NSE y purrr
+## Proyecto Estratégico Metodologías y Ciencia de Datos para la Producción Estadística
 
-## Proyecto Estratégico Servicios Compartidos para la Producción Estadística
-
-### Agosto 2022
+### Septiembre 2022
