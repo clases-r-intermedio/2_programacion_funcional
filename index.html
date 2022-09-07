@@ -612,7 +612,7 @@ randomise(mean)
 ```
 
 ```
-## [1] 0.6483794
+## [1] 0.6041185
 ```
 
 ```r
@@ -620,7 +620,7 @@ randomise(sum)
 ```
 
 ```
-## [1] 5.41842
+## [1] 5.591804
 ```
 
 ```r
@@ -628,7 +628,7 @@ randomise(median)
 ```
 
 ```
-## [1] 0.4248115
+## [1] 0.4280648
 ```
 
 
@@ -1189,16 +1189,36 @@ La url es la siguiente: https://gitlab.com/inesscc/demostracion_git.git
 El siguiente código genera un resultado muy similar al del último ejercicio revisado en la clase. La diferencia es que la implementación es mediante un ciclo *for*. Adicionalmente, se agrega una funcionalidad que agrega al título el año correspondiente.     
 
 
+
+---
+
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Tarea para la 🏠 (continuación ejercicio 1)
+
+
+
 ```r
 gapminder_list &lt;- split(gapminder, gapminder$year)
-plots &lt;- list(vector(length = length(gapminder_list) ))
-i &lt;- 1
-for (plot in gapminder_list) {
-  table &lt;- count_something(plot, continent, pop)
-  plots[[i]] &lt;- plot_table(table, continent, n, paste("Población mundial, según continente. Año", plot$year[1] )  )
-  i &lt;-  i + 1
+plot_with_for &lt;- function(tablas){
+  plots &lt;- list(vector(length = length(tablas) ))
+  i &lt;- 1
+  for (plot in tablas) {
+    table &lt;- count_something(plot, continent, pop)
+    plots[[i]] &lt;- plot_table(table, continent, n, paste("Población mundial, según continente. Año", plot$year[1] )  )
+    i &lt;-  i + 1
+  }
+  return(plots)
 }
 ```
+
+
+```r
+plots &lt;- plot_with_for(gapminder_list)
+```
+
 
 La tarea consiste en llegar al mismo resultado, pero utilizando únicamente las herramientas de `purrr`. **Crea una función llamada plot_with_purrr que reciba una lista de tablas y devuelva una lista de gráficos** 
 
@@ -1213,8 +1233,16 @@ background-position: 100% 0%
 
 **Ejercicio 2**
 
-Modifica la función `plot_table` para que el año del gráfico aparezca en el subtítulo y no en el título. La función modificada debería recibir un parámetro extra, que permita agregar el año.
+Modifica la función `plot_table` para que el año del gráfico aparezca en el subtítulo y no en el título. La función modificada debería recibir un parámetro extra llamado `subtitulo`, que permita agregar el año al subtítulo del gráfico.
 
+Una vez que hayas modificado tu función, utilízala dentro de `plot_with_purrr`. Cada gráfico debería tener el año correspondiente en el subtítulo.  
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Tarea para la 🏠
 
 **Ejercicio 3**
 
@@ -1236,8 +1264,25 @@ nested_for &lt;- function(v1, v2) {
 nested_for(1:3, 5:8)
 ```
 
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
 
+# Tarea para la 🏠 (Bonus)
 
+Si quieres practicar más, puedes realizar el siguiente ejercicio. No es parte de la evaluación, pero te puede dar puntos extras en caso de que no obtengas todo el puntaje en alguno de los ejercicios anteriores.    
+
+Con los datos de la ENE y **siempre utilizando purrr**, realiza las siguientes tareas:
+
+- Carga todos los trimestres de 2022 en una lista
+- Escribe una función llamada get_employment_sample que reciba un dataframe y devuelva la cantidad de ocupados sin expandir. La categoría 1 de la variable *activ* muestra a los ocupados.    
+- Usando get_employment_sample, genera un gráfico que muestre la cantidad de ocupados y no ocupados para cada uno de los trimestres.
+- Guarda cada uno de los gráficos en una carpeta de tu computador en formato jpg o pdf.  
+- Abre un rmd y carga todos los gráficos guardados (usando purrr)
+- Genera un pdf o html que tenga en su interior los gráficos
+
+Para los últimos 2 pasos, deberás empujar al repositorio, además, el archivo rmd
 
 ---
 
