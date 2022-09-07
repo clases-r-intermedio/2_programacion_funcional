@@ -4,7 +4,7 @@
     <title>Capacitación paquete calidad</title>
     <meta charset="utf-8" />
     <meta name="author" content="" />
-    <meta name="date" content="2022-09-06" />
+    <meta name="date" content="2022-09-07" />
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
   <body>
@@ -612,7 +612,7 @@ randomise(mean)
 ```
 
 ```
-## [1] 0.4137654
+## [1] 0.4883247
 ```
 
 ```r
@@ -620,7 +620,7 @@ randomise(sum)
 ```
 
 ```
-## [1] 4.80982
+## [1] 4.420911
 ```
 
 ```r
@@ -628,7 +628,7 @@ randomise(median)
 ```
 
 ```
-## [1] 0.4610817
+## [1] 0.3187619
 ```
 
 
@@ -1039,6 +1039,95 @@ library(feather)
 files &lt;- paste0("data/", names(continentes), ".feather")
 walk2(continentes, files, write_feather)
 ```
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# imap
+
+A veces, es útil iterar sobre los nombres de una lista
+
+--
+
+Extraer nombres de archivos y construir etiquetas
+
+```r
+files &lt;- list.files("data/datos_ene/", full.names = T)
+trimestres &lt;- list.files("data/datos_ene/") %&gt;% 
+  str_extract(pattern = "-[[:digit:]]{2}-") %&gt;% 
+  str_remove_all("-")
+```
+
+--
+
+Leer archivos y etiquetar
+
+```r
+varios_ene &lt;-  map(files, read_csv2 )
+names(varios_ene) &lt;-  paste0("trimestre_", trimestres)  
+nombres_lista &lt;-  imap(varios_ene, ~.y)
+nombres_lista
+```
+
+```
+## $trimestre_01
+## [1] "trimestre_01"
+## 
+## $trimestre_02
+## [1] "trimestre_02"
+## 
+## $trimestre_03
+## [1] "trimestre_03"
+## 
+## $trimestre_04
+## [1] "trimestre_04"
+## 
+## $trimestre_05
+## [1] "trimestre_05"
+## 
+## $trimestre_06
+## [1] "trimestre_06"
+```
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# imap
+
+Creamos una variable con el nombre de cada elemento
+
+
+```r
+ocupados &lt;- imap(varios_ene, .f = ~mutate(., .y = if_else(activ == 1, 1, 0) ))
+ocupados[[1]] %&gt;% count(trimestre_01)
+```
+
+```
+## Error in `group_by()`:
+## ! Must group by variables found in `.data`.
+## ✖ Column `trimestre_01` is not found.
+```
+
+### ¿Qué podemos hacer para arreglar el problema?
+
+.center[
+&lt;img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" /&gt;
+]
+
+--
+
+
+```r
+ocupados &lt;- imap(varios_ene, .f = ~mutate(., !!rlang::parse_expr(.y)  := if_else(activ == 1, 1, 0) ))
+```
+
+
+
 
 
 

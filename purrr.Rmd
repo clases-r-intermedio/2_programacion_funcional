@@ -875,6 +875,66 @@ walk2(continentes, files, write_feather)
 
 ```
 
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# imap
+
+A veces, es útil iterar sobre los nombres de una lista
+
+--
+
+Extraer nombres de archivos y construir etiquetas
+```{r}
+files <- list.files("data/datos_ene/", full.names = T)
+trimestres <- list.files("data/datos_ene/") %>% 
+  str_extract(pattern = "-[[:digit:]]{2}-") %>% 
+  str_remove_all("-")
+```
+
+--
+
+Leer archivos y etiquetar
+```{r}
+varios_ene <-  map(files, read_csv2 )
+names(varios_ene) <-  paste0("trimestre_", trimestres)  
+nombres_lista <-  imap(varios_ene, ~.y)
+nombres_lista
+```
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# imap
+
+Creamos una variable con el nombre de cada elemento
+
+```{r, error=T}
+ocupados <- imap(varios_ene, .f = ~mutate(., .y = if_else(activ == 1, 1, 0) ))
+ocupados[[1]] %>% count(trimestre_01)
+
+```
+
+### ¿Qué podemos hacer para arreglar el problema?
+
+.center[
+<img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" />
+]
+
+--
+
+```{r}
+ocupados <- imap(varios_ene, .f = ~mutate(., !!rlang::parse_expr(.y)  := if_else(activ == 1, 1, 0) ))
+```
+
+
+
+
 
 
 ---
