@@ -471,7 +471,7 @@ background-position: 100% 0%
 
 # Ejercicio dplyr (continuación)
 
-Crea una función `plot_table` que acompañe a `count_something`. `plot_table` debe recibir la tabla creada por `count_something` y devolver un gráfico de barras. Es importante que la función reciba el nombre de la variable x y la variable y. Además, debe existir un parámetro para agregar un título al gráfico. El llamado a la función `plot_table(table, continent, n,  "Total del ingreso por región" )` debería tener este resultado 
+Crea una función `plot_table` que acompañe a `count_something`. `plot_table` debe recibir la tabla creada por `count_something` y devolver un gráfico de barras. Es importante que la función reciba el nombre de la variable x y la variable y. Además, debe existir un parámetro para agregar un título al gráfico. El llamado a la función `plot_table(table, region, n,  "Total del ingreso por región" )` debería tener este resultado 
 
 .pull-left[
 
