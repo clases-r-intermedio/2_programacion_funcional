@@ -4,7 +4,8 @@
     <title>Capacitación paquete calidad</title>
     <meta charset="utf-8" />
     <meta name="author" content="" />
-    <meta name="date" content="2022-09-07" />
+    <meta name="date" content="2022-12-07" />
+    <script src="purrr_files/header-attrs-2.16/header-attrs.js"></script>
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
   <body>
@@ -22,7 +23,7 @@ class: center, middle
 
 ## Proyecto Estratégico Metodologías y Ciencia de Datos para la Producción Estadística
 
-### Septiembre 2022
+### Diciembre 2022
 
 
 
@@ -88,7 +89,7 @@ calcular_cosas(gapminder, pop)
 ## Error in `summarise()`:
 ## ! Problem while computing `min = min(var)`.
 ## Caused by error in `mask$eval_all_summarise()`:
-## ! objeto 'pop' no encontrado
+## ! object 'pop' not found
 ```
 
 
@@ -158,7 +159,7 @@ pop
 ```
 
 ```
-## Error in eval(expr, envir, enclos): objeto 'pop' no encontrado
+## Error in eval(expr, envir, enclos): object 'pop' not found
 ```
 --
 
@@ -392,7 +393,7 @@ calcular_cosas(gapminder, pop)
 ```
 
 ```
-## Error: &lt;text&gt;:5:27: inesperado '='
+## Error: &lt;text&gt;:5:27: unexpected '='
 ## 4:   data %&gt;% 
 ## 5:     summarise(!!enquo_var =
 ##                              ^
@@ -515,23 +516,23 @@ background-position: 100% 0%
 
 # Ejercicio dplyr
 
-Trabajaremos con los datos de Casen. Escriba una función llamada `count_something` que agrupe por una variable y sume otra. Por ejemplo, `count_something(casen, region, ytotcor)` debería devolver lo siguiente:
+Trabajaremos con los datos de Casen. Escriba una función llamada `sum_something` que agrupe por una variable y sume otra. Por ejemplo, `sum_something(casen, region, ytotcor)` debería devolver lo siguiente:
 
 
 ```
 ## # A tibble: 3 × 2
 ##   region          n
 ##    &lt;dbl&gt;      &lt;dbl&gt;
-## 1      1 2526025586
-## 2      2 2574294232
-## 3      3 2153503069
+## 1      1 2526228202
+## 2      2 2577850836
+## 3      3 2157490923
 ```
 
 --
 
 
 ```r
-count_something &lt;- function(data, group_var, var) {
+sum_something &lt;- function(data, group_var, var) {
   data %&gt;% 
     group_by(!!enexpr(group_var)) %&gt;% 
     summarise(n = sum(!!enexpr(var)))
@@ -546,7 +547,7 @@ background-position: 100% 0%
 
 # Ejercicio dplyr (continuación)
 
-Crea una función `plot_table` que acompañe a `count_something`. `plot_table` debe recibir la tabla creada por `count_something` y devolver un gráfico de barras. Es importante que la función reciba el nombre de la variable x y la variable y. Además, debe existir un parámetro para agregar un título al gráfico. El llamado a la función `plot_table(table, region, n,  "Total del ingreso por región" )` debería tener este resultado 
+Crea una función `plot_table` que acompañe a `sum_something`. `plot_table` debe recibir la tabla creada por `sum_something` y devolver un gráfico de barras. Es importante que la función reciba el nombre de la variable x y la variable y. Además, debe existir un parámetro para agregar un título al gráfico. El llamado a la función `plot_table(table, region, n,  "Total del ingreso por región" )` debería tener este resultado 
 
 .pull-left[
 
@@ -560,7 +561,7 @@ Crea una función `plot_table` que acompañe a `count_something`. `plot_table` d
 
 
 ```r
-tabla &lt;- count_something(casen, region, ytotcor)
+tabla &lt;- sum_something(casen, region, ytotcor)
 plot_table &lt;- function(table, x_var, y_var,  input_title ) {
   ggplot(table, aes(x = !!enexpr(x_var), y = !!enexpr(y_var) )) +
     geom_bar(stat = "identity") +
@@ -612,7 +613,7 @@ randomise(mean)
 ```
 
 ```
-## [1] 0.6041185
+## [1] 0.4659979
 ```
 
 ```r
@@ -620,7 +621,7 @@ randomise(sum)
 ```
 
 ```
-## [1] 5.591804
+## [1] 5.308851
 ```
 
 ```r
@@ -628,7 +629,7 @@ randomise(median)
 ```
 
 ```
-## [1] 0.4280648
+## [1] 0.4216911
 ```
 
 
@@ -1144,7 +1145,7 @@ Tenemos un listado de `dataframes` separados por año
 ```r
 gapminder_list &lt;- split(gapminder, gapminder$year)
 ```
-Retomemos nuestras funciones `count_something` y `plot_table`. 
+Retomemos nuestras funciones `sum_something` y `plot_table`. 
 
 La idea es usar `purrr` con el listado que tenemos y generar un gráfico para cada año en el que se muestre la población de cada continente. 
 
@@ -1153,7 +1154,7 @@ La idea es usar `purrr` con el listado que tenemos y generar un gráfico para ca
 
 ```r
 plots_by_year &lt;- gapminder_list %&gt;% 
-  map(~count_something(.x, continent, pop)) %&gt;% 
+  map(~sum_something(.x, continent, pop)) %&gt;% 
   map(~plot_table(.x, continent, n, "Población mundial, según continente" ))
 ```
 
@@ -1162,7 +1163,7 @@ plots_by_year &lt;- gapminder_list %&gt;%
 
 ```r
 plots_by_year &lt;- gapminder_list %&gt;% 
-  map(count_something, continent, pop) %&gt;% 
+  map(sum_something, continent, pop) %&gt;% 
   map(plot_table, continent, n, "Población mundial, según continente" )
 ```
 
@@ -1206,7 +1207,7 @@ plot_with_for &lt;- function(tablas){
   plots &lt;- list(vector(length = length(tablas) ))
   i &lt;- 1
   for (plot in tablas) {
-    table &lt;- count_something(plot, continent, pop)
+    table &lt;- sum_something(plot, continent, pop)
     plots[[i]] &lt;- plot_table(table, continent, n, paste("Población mundial, según continente. Año", plot$year[1] )  )
     i &lt;-  i + 1
   }
@@ -1297,7 +1298,7 @@ class: center, middle
 
 ## Proyecto Estratégico Metodologías y Ciencia de Datos para la Producción Estadística
 
-### Septiembre 2022
+### Diciembre 2022
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
