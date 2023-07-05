@@ -1,26 +1,23 @@
----
-title: "Capacitación paquete calidad"
-subtitle: "calidad"
-author: 
-date: '`r Sys.Date()`'
-output:
-  xaringan::moon_reader:
-    seal: false
-    #lib_dir: libs
-    css: xaringan-themer.css
-    nature:
-      highlightStyle: github
-      highlightLines: true
-      countIncrementalSlides: False
-      ratio: '13:9'
----
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Capacitación paquete calidad</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="" />
+    <meta name="date" content="2023-07-05" />
+    <script src="purrr_files/header-attrs-2.21/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
 
 class: center, middle
 
 .linea-superior[]
 .linea-inferior[]
 
-<img src="imagenes/logo_portada2.png" width="200" />
+&lt;img src="imagenes/logo_portada2.png" width="200" /&gt;
 
 ## Capacitación en R y herramientas de productividad - nivel intermedio
 
@@ -28,17 +25,9 @@ class: center, middle
 
 ### Julio 2023
 
-```{r setup, include=FALSE}
-options(htmltools.dir.version = TRUE)
-knitr::opts_chunk$set(message = FALSE, warning = F) 
-options(scipen = "999")
-```
 
-```{r xaringan-themer, include=FALSE, warning=FALSE}
-library(xaringanthemer)
-library(tidyverse)
-library(feather)
-```
+
+
 
 ---
 
@@ -80,11 +69,12 @@ background-position: 100% 0%
 
 ### Queremos una función que calcule mínimo, máximo, media y mediana en un `dataframe` 
 
-```{r, error = T}
+
+```r
 library(gapminder)
 library(tidyverse)
-calcular_cosas <- function(data, var) {
-  data %>% 
+calcular_cosas &lt;- function(data, var) {
+  data %&gt;% 
     summarise(min = min(var),
               max = max(var),
               mean = mean(var),
@@ -93,12 +83,18 @@ calcular_cosas <- function(data, var) {
 }
 
 calcular_cosas(gapminder, pop)
+```
 
+```
+## Error in `summarise()`:
+## ℹ In argument: `min = min(var)`.
+## Caused by error:
+## ! object 'pop' not found
 ```
 
 
 .center[
-<img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" />
+&lt;img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" /&gt;
 ]
 
 
@@ -113,20 +109,27 @@ background-position: 100% 0%
 ### Cambiemos un par de cosas
 
 
-```{r}
-library(rlang)
-calcular_cosas <- function(data, var) {
-  enquo_var <- enexpr(var) #<<
 
-  data %>% 
-    summarise(min = min(!!enquo_var), #<<
+```r
+library(rlang)
+calcular_cosas &lt;- function(data, var) {
+* enquo_var &lt;- enexpr(var)
+
+  data %&gt;% 
+*   summarise(min = min(!!enquo_var),
               max = max(!!enquo_var),
               mean = mean(!!enquo_var),
               median = median(!!enquo_var)
               )
 }
 calcular_cosas(gapminder, pop)
+```
 
+```
+## # A tibble: 1 × 4
+##     min        max      mean   median
+##   &lt;int&gt;      &lt;int&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 60011 1318683096 29601212. 7023596.
 ```
 
 --
@@ -150,8 +153,13 @@ background-position: 100% 0%
 
 ### Para saber si un argumento es quoted o evaluado, simplemente ejecutamos el argumento fuera de la función
 
-```{r, error=T}
+
+```r
 pop
+```
+
+```
+## Error in eval(expr, envir, enclos): object 'pop' not found
 ```
 --
 
@@ -167,7 +175,8 @@ background-position: 100% 0%
 
 ### Argumentos evaluados
 
-```{r, eval = F}
+
+```r
 sum(mtcars$am)
 class(mtcars)
 ```
@@ -176,14 +185,14 @@ class(mtcars)
 
 ### Argumentos quoted
 
-```{r, eval=F}
+
+```r
 library(dplyr)
 
-by_cyl <- mtcars %>%
+by_cyl &lt;- mtcars %&gt;%
   summarise(mean = mean(mpg)) 
 
-calcular_cosas(gapminder, pop) #<<
-
+*calcular_cosas(gapminder, pop)
 ```
 
 ---
@@ -195,9 +204,13 @@ background-position: 100% 0%
 
 ### Evaluar de manera no estándar consiste en atrapar expresiones y evaluarlas en otro momento
 
-```{r}
-expr(x + y)
 
+```r
+expr(x + y)
+```
+
+```
+## x + y
 ```
 --
 
@@ -205,18 +218,28 @@ expr(x + y)
 
 --
 
-```{r}
-devolver_expresion <- function(x) {
+
+```r
+devolver_expresion &lt;- function(x) {
   expr(x)}
 devolver_expresion(a + b)
 ```
+
+```
+## x
+```
 ### La función `expr` es demasiado literal. Podemos usar enexpr (enrich) 
 
-```{r}
-devolver_expresion <- function(x) {
+
+```r
+devolver_expresion &lt;- function(x) {
   enexpr(x)
 }
 devolver_expresion(a + b)
+```
+
+```
+## a + b
 ```
 
 
@@ -231,18 +254,18 @@ background-position: 100% 0%
 
 ### Volviendo a nuestra función `calcular_cosas`...
  
-```{r, eval=F}
-calcular_cosas <- function(data, var) {
-  enquo_var <- enexpr(var) #<<
 
-  data %>% 
+```r
+calcular_cosas &lt;- function(data, var) {
+* enquo_var &lt;- enexpr(var)
+
+  data %&gt;% 
     summarise(min = min(!!enquo_var),
               max = max(!!enquo_var),
               mean = mean(!!enquo_var),
               median = median(!!enquo_var)
               )
 }
-
 ```
 
 --
@@ -253,12 +276,17 @@ calcular_cosas <- function(data, var) {
 --
 
 
-```{r}
-calcular_cosas <- function(data, var) {
-  enquo_var <- enexpr(var) 
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- enexpr(var) 
   return(enquo_var)
 }
 calcular_cosas(var = pop)
+```
+
+```
+## pop
 ```
 
 
@@ -277,7 +305,7 @@ background-position: 100% 0%
 ]
 
 .pull-right[
-<img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" />
+&lt;img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" /&gt;
 ]
 
 
@@ -289,14 +317,22 @@ background-position: 100% 0%
 
 --
 
-```{r}
-calcular_cosas <- function(data, var) {
-  enquo_var <- enexpr(var) 
 
-  data %>% 
-    summarise(min = min(!!enquo_var)) #<<
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- enexpr(var) 
+
+  data %&gt;% 
+*   summarise(min = min(!!enquo_var))
 }
 calcular_cosas(gapminder, pop)
+```
+
+```
+## # A tibble: 1 × 1
+##     min
+##   &lt;int&gt;
+## 1 60011
 ```
 
 ### Estamos evaluando la variable enquo_var
@@ -313,18 +349,22 @@ background-position: 100% 0%
 
 ### Idea número 1
 
-```{r}
 
-calcular_cosas <- function(data, var) {
-  enquo_var <- enexpr(var) 
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- enexpr(var) 
 
-  data %>% 
-    summarise(var = min(!!enquo_var)) #<<
+  data %&gt;% 
+*   summarise(var = min(!!enquo_var))
 }
 calcular_cosas(gapminder, pop)
+```
 
-
-
+```
+## # A tibble: 1 × 1
+##     var
+##   &lt;int&gt;
+## 1 60011
 ```
 
 --
@@ -341,14 +381,22 @@ background-position: 100% 0%
 
 ### Idea número 2: evaluar *enquo_var* 
 
-```{r, error=T}
-calcular_cosas <- function(data, var) {
-  enquo_var <- enexpr(var) 
 
-  data %>% 
-    summarise(!!enquo_var = min(!!enquo_var)) #<<
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- enexpr(var) 
+
+  data %&gt;% 
+*   summarise(!!enquo_var = min(!!enquo_var))
 }
 calcular_cosas(gapminder, pop)
+```
+
+```
+## Error: &lt;text&gt;:5:27: unexpected '='
+## 4:   data %&gt;% 
+## 5:     summarise(!!enquo_var =
+##                              ^
 ```
 
 ---
@@ -361,12 +409,20 @@ background-position: 100% 0%
 
 ### Debemos resolver el problema con un nuevo operador
 
-```{r}
-calcular_cosas <- function(data, var) {
-  enquo_var <- enexpr(var) 
-  data %>% 
-    summarise(!!enquo_var := min(!!enquo_var))} #<<
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- enexpr(var) 
+  data %&gt;% 
+*   summarise(!!enquo_var := min(!!enquo_var))}
 calcular_cosas(gapminder, pop)
+```
+
+```
+## # A tibble: 1 × 1
+##     pop
+##   &lt;int&gt;
+## 1 60011
 ```
 --
 
@@ -374,13 +430,20 @@ Si queremos entregar un string como input podemos usar `sym`
 
 `sym` convierte un string en un símbolo. Esta operación se denomina *parsing*
 
-```{r}
-calcular_cosas <- function(data, var) {
-  enquo_var <- sym(var)
-  data %>% 
-    summarise(!!enquo_var  := min(!!enquo_var))} #<<
-calcular_cosas(gapminder, "pop")
 
+```r
+calcular_cosas &lt;- function(data, var) {
+  enquo_var &lt;- sym(var)
+  data %&gt;% 
+*   summarise(!!enquo_var  := min(!!enquo_var))}
+calcular_cosas(gapminder, "pop")
+```
+
+```
+## # A tibble: 1 × 1
+##     pop
+##   &lt;int&gt;
+## 1 60011
 ```
 
 
@@ -394,14 +457,21 @@ background-position: 100% 0%
 
 ### Otra opción es usar la función `parse_expr` de `rlang`
 
-```{r}
-calcular_cosas <- function(data, var) {
-  enquo_var <- parse_expr(var)  #<<
-  data %>% 
+
+```r
+calcular_cosas &lt;- function(data, var) {
+* enquo_var &lt;- parse_expr(var)
+  data %&gt;% 
     summarise(!!enquo_var  := min(!!enquo_var))
 }
 calcular_cosas(gapminder, "pop")
+```
 
+```
+## # A tibble: 1 × 1
+##     pop
+##   &lt;int&gt;
+## 1 60011
 ```
 ---
 background-image: url("imagenes/fondo2.PNG")
@@ -412,12 +482,20 @@ background-position: 100% 0%
 
 ### Hace un tiempo existe el operador embrace `{{}}`
 
-```{r}
-calcular_cosas <- function(data, var) {
-  data %>% 
-    summarise({{var}} := min({{var}})) #<<
+
+```r
+calcular_cosas &lt;- function(data, var) {
+  data %&gt;% 
+*   summarise({{var}} := min({{var}}))
 }
 calcular_cosas(gapminder, pop)
+```
+
+```
+## # A tibble: 1 × 1
+##     pop
+##   &lt;int&gt;
+## 1 60011
 ```
 
 --
@@ -440,27 +518,25 @@ background-position: 100% 0%
 
 Trabajaremos con los datos de Casen. Escriba una función llamada `sum_something` que agrupe por una variable y sume otra. Por ejemplo, `sum_something(casen, region, ytotcor)` debería devolver lo siguiente:
 
-```{r,echo=FALSE}
-casen <- read_feather("data/casen_2020_edit.feather")
 
-sum_something <- function(data, group_var, var) {
-  data %>% 
-    group_by(!!enexpr(group_var)) %>% 
-    summarise(n = sum(!!enexpr(var)))
-}
-sum_something(casen, region, ytotcor) %>% slice(1:3)
-
+```
+## # A tibble: 3 × 2
+##   region          n
+##    &lt;dbl&gt;      &lt;dbl&gt;
+## 1      1 2526228202
+## 2      2 2577850836
+## 3      3 2157490923
 ```
 
 --
 
-```{r}
-sum_something <- function(data, group_var, var) {
-  data %>% 
-    group_by(!!enexpr(group_var)) %>% 
+
+```r
+sum_something &lt;- function(data, group_var, var) {
+  data %&gt;% 
+    group_by(!!enexpr(group_var)) %&gt;% 
     summarise(n = sum(!!enexpr(var)))
 }
-
 ```
 
 ---
@@ -475,21 +551,7 @@ Crea una función `plot_table` que acompañe a `sum_something`. `plot_table` deb
 
 .pull-left[
 
-```{r, echo=F, fig.height=5, fig.width=4.5}
-
-tabla <- sum_something(casen, region, ytotcor)
-
-plot_table <- function(table, x_var, y_var,  input_title ) {
-  ggplot(table, aes(x = !!enexpr(x_var), y = !!enexpr(y_var) )) +
-    geom_bar(stat = "identity") +
-    labs(title = input_title)
-}
-
-plot_table(tabla, region, n,  "Total del ingreso por región" )
-
-
-
-```
+![](purrr_files/figure-html/unnamed-chunk-20-1.png)&lt;!-- --&gt;
 
 ]
 
@@ -497,16 +559,16 @@ plot_table(tabla, region, n,  "Total del ingreso por región" )
 
 .pull-right[
 
-```{r, eval=F}
-tabla <- sum_something(casen, region, ytotcor)
-plot_table <- function(table, x_var, y_var,  input_title ) {
+
+```r
+tabla &lt;- sum_something(casen, region, ytotcor)
+plot_table &lt;- function(table, x_var, y_var,  input_title ) {
   ggplot(table, aes(x = !!enexpr(x_var), y = !!enexpr(y_var) )) +
     geom_bar(stat = "identity") +
     labs(title = input_title)
 }
 
 plot_table(tabla, region, n,  "Total del ingreso por región" )
-
 ```
 
 ]
@@ -537,17 +599,37 @@ background-position: 100% 0%
 
 Una "funcional" (*functional*) es una función que recibe como input otra función
 
-```{r}
-randomise <- function(f) f(runif(10))
+
+```r
+randomise &lt;- function(f) f(runif(10))
 ```
 --
 
 `randomise` recibe una función y hace algo con un vector de 10 números aleatorios
 
-```{r}
+
+```r
 randomise(mean)
+```
+
+```
+## [1] 0.5114253
+```
+
+```r
 randomise(sum)
+```
+
+```
+## [1] 5.445902
+```
+
+```r
 randomise(median)
+```
+
+```
+## [1] 0.8491073
 ```
 
 
@@ -578,13 +660,14 @@ Típicamente, las funcionales se usan como alternativa a los *loops*
 
 Nosotros trabajaremos con el paquete `purrr`
 
-```{r}
+
+```r
 library(purrr)
 ```
 
 
 .center[
-<img src="imagenes/purrr.png" width="200" />
+&lt;img src="imagenes/purrr.png" width="200" /&gt;
 ]
 
 
@@ -598,22 +681,35 @@ background-position: 100% 0%
 
 Función que calcula el cuadrado del input
 
-```{r}
-cuadrado <- function(x) x ** 2
+
+```r
+cuadrado &lt;- function(x) x ** 2
 ```
 
 --
 
 `map` lleva el vector `1:3` hacia la función cuadrado
 
-```{r}
+
+```r
 map(1:3, cuadrado)
+```
+
+```
+## [[1]]
+## [1] 1
+## 
+## [[2]]
+## [1] 4
+## 
+## [[3]]
+## [1] 9
 ```
 
 
 
 .center[
-<img src="https://d33wubrfki0l68.cloudfront.net/f0494d020aa517ae7b1011cea4c4a9f21702df8b/2577b/diagrams/functionals/map.png" width="200" />
+&lt;img src="https://d33wubrfki0l68.cloudfront.net/f0494d020aa517ae7b1011cea4c4a9f21702df8b/2577b/diagrams/functionals/map.png" width="200" /&gt;
 ]
 
 
@@ -625,14 +721,14 @@ background-position: 100% 0%
 # ¿Qué tienen que ver los mapas?
 
 .center[
-<img src="imagenes/mapa.png" width="400" />
+&lt;img src="imagenes/mapa.png" width="400" /&gt;
 ]
 
 
 --
 
 .center[
-<img src="imagenes/mapear_funcion.png" width="400" />
+&lt;img src="imagenes/mapear_funcion.png" width="400" /&gt;
 ]
 
 
@@ -657,12 +753,25 @@ Tenemos claridad de lo que entra y sale de la función
 
  
 
-```{r, error=T}
-triple_chr <- function(x) as.character(x * 3)
+
+```r
+triple_chr &lt;- function(x) as.character(x * 3)
 map_int(1:3, triple_chr)
 ```
-```{r}
+
+```
+## Error in `map_int()`:
+## ℹ In index: 1.
+## Caused by error:
+## ! Can't coerce from a string to an integer vector.
+```
+
+```r
 map_chr(1:3, triple_chr)
+```
+
+```
+## [1] "3" "6" "9"
 ```
 
 
@@ -676,9 +785,14 @@ background-position: 100% 0%
 
 ### La función `mean` se evalúa en cada uno de los vectores de la lista
 
-```{r}
-lista_vectores <- list(1:3, 1:10, 2:9, 1)
+
+```r
+lista_vectores &lt;- list(1:3, 1:10, 2:9, 1)
 map_dbl(lista_vectores, mean)
+```
+
+```
+## [1] 2.0 5.5 5.5 1.0
 ```
 --
 
@@ -686,7 +800,7 @@ map_dbl(lista_vectores, mean)
 
 
 .center[
-<img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" />
+&lt;img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" /&gt;
 ]
 
 
@@ -700,17 +814,30 @@ background-position: 100% 0%
 
 ### En `R`, los `dataframes` son listas con vectores de la misma longitud
 
-```{r}
+
+```r
 typeof(mtcars)
+```
+
+```
+## [1] "list"
 ```
 --
 
-```{r}
+
+```r
 map_dbl(mtcars, mean)
 ```
 
+```
+##        mpg        cyl       disp         hp       drat         wt       qsec 
+##  20.090625   6.187500 230.721875 146.687500   3.596563   3.217250  17.848750 
+##         vs         am       gear       carb 
+##   0.437500   0.406250   3.687500   2.812500
+```
+
 .center[
-<img src="https://media.giphy.com/media/l3V0dy1zzyjbYTQQM/giphy.gif" width="250" />
+&lt;img src="https://media.giphy.com/media/l3V0dy1zzyjbYTQQM/giphy.gif" width="250" /&gt;
 ]
 
 
@@ -726,9 +853,14 @@ background-position: 100% 0%
 
 ### ¿Qué pasa si queremos usar más argumentos?
 
-```{r}
-lista_vectores <- list(1:3, c(1:10, NA))
+
+```r
+lista_vectores &lt;- list(1:3, c(1:10, NA))
 map_dbl(lista_vectores, ~mean(.x, na.rm = TRUE))
+```
+
+```
+## [1] 2.0 5.5
 ```
 
 `.x` toma el valor de los elementos que están dentro de `lista_vectores` 
@@ -738,7 +870,7 @@ El parámetro que varía va a la izquierda y el parámetro fijo a la derecha
 --
 
 .center[
-<img src="https://d33wubrfki0l68.cloudfront.net/e1b3536a7556aef348f546a79277125c419a5fdc/0c0a1/diagrams/functionals/map-arg.png" width="400" />
+&lt;img src="https://d33wubrfki0l68.cloudfront.net/e1b3536a7556aef348f546a79277125c419a5fdc/0c0a1/diagrams/functionals/map-arg.png" width="400" /&gt;
 ]
 
 
@@ -753,27 +885,34 @@ background-position: 100% 0%
 
 ### La función `media_sumar` calcula la media y suma un valor
 
-```{r}
-media_sumar <- function(vector, valor) {
+
+```r
+media_sumar &lt;- function(vector, valor) {
   mean(vector) + valor
 }
 ```
 
 ### Queremos que la función itere sobre `lista_vectores` y sobre `valores`
 
-```{r}
-lista_vectores <- list(1:3, 1:5, 2:5)
-valores <- c(2, 3, 8)
+
+```r
+lista_vectores &lt;- list(1:3, 1:5, 2:5)
+valores &lt;- c(2, 3, 8)
 ```
 
 --
 
-```{r}
+
+```r
 map2_dbl(lista_vectores, valores, media_sumar)
 ```
 
+```
+## [1]  4.0  6.0 11.5
+```
+
 .center[
-<img src="https://d33wubrfki0l68.cloudfront.net/f5cddf51ec9c243a7c13732b0ce46b0868bf8a31/501a8/diagrams/functionals/map2.png" width="300" />
+&lt;img src="https://d33wubrfki0l68.cloudfront.net/f5cddf51ec9c243a7c13732b0ce46b0868bf8a31/501a8/diagrams/functionals/map2.png" width="300" /&gt;
 ]
 
 ---
@@ -785,10 +924,14 @@ background-position: 100% 0%
 
 Tenemos una lista muy larga de elementos con nombres inscritos en el registro civil
 
-```{r}
-lista_anios <- split(guaguas::guaguas, ~anio )
-names(lista_anios)[1:5]
 
+```r
+lista_anios &lt;- split(guaguas::guaguas, ~anio )
+names(lista_anios)[1:5]
+```
+
+```
+## [1] "1920" "1921" "1922" "1923" "1924"
 ```
 Vamos a imaginar que cada elemento ocupa mucha memoria, por lo que deben ser procesados en secuencia
 
@@ -796,9 +939,14 @@ Vamos a imaginar que cada elemento ocupa mucha memoria, por lo que deben ser pro
 
 La idea es calcular la suma de nombres (variable n) para cada año, filtrando por una variable que puede ser hombre o mujer
 
-```{r}
-filtro <-  map_chr(1:length(lista_anios), ~sample(x = c("F", "M"), size = 1))
+
+```r
+filtro &lt;-  map_chr(1:length(lista_anios), ~sample(x = c("F", "M"), size = 1))
 filtro[1:5]
+```
+
+```
+## [1] "F" "F" "M" "M" "F"
 ```
 
 
@@ -810,9 +958,10 @@ background-position: 100% 0%
 # Resultado ejercicio map2
 
 
-```{r}
-totales <- map2(lista_anios, filtro,  ~.x %>% 
-      dplyr::filter(sexo == .y) %>% 
+
+```r
+totales &lt;- map2(lista_anios, filtro,  ~.x %&gt;% 
+      dplyr::filter(sexo == .y) %&gt;% 
       dplyr::summarise(total = sum(n) )
       )
 ```
@@ -828,25 +977,31 @@ background-position: 100% 0%
 
 ### Necesitamos iterar sobre 3 vectores
 
-```{r}
-media_sumar_dividir <- function(vector, valor_suma, valor_division) {
+
+```r
+media_sumar_dividir &lt;- function(vector, valor_suma, valor_division) {
   (mean(vector) + valor_suma) / valor_division
 }
 
-lista_vectores <- list(1:3, 1:5, 2:5)
-valores_suma <- c(2, 3, 8)
-valores_division <- c(2, 1, 9)
+lista_vectores &lt;- list(1:3, 1:5, 2:5)
+valores_suma &lt;- c(2, 3, 8)
+valores_division &lt;- c(2, 1, 9)
 ```
 
 --
 
-```{r}
+
+```r
 pmap_dbl(list(lista_vectores, valores_suma, valores_division), media_sumar_dividir)
+```
+
+```
+## [1] 2.000000 6.000000 1.277778
 ```
 
 
 .center[
-<img src="https://d33wubrfki0l68.cloudfront.net/2eb2eefe34ad6d114da2a22df42deac8511b4788/5a538/diagrams/functionals/pmap-arg.png" width="300" />
+&lt;img src="https://d33wubrfki0l68.cloudfront.net/2eb2eefe34ad6d114da2a22df42deac8511b4788/5a538/diagrams/functionals/pmap-arg.png" width="300" /&gt;
 ]
 
 
@@ -861,9 +1016,27 @@ background-position: 100% 0%
 
 ### A veces, nos interesa una función por sus *side-effects*
 
-```{r, eval=T}
-animales <- c("perro", "gato", "elefante")
+
+```r
+animales &lt;- c("perro", "gato", "elefante")
 map(animales, print)
+```
+
+```
+## [1] "perro"
+## [1] "gato"
+## [1] "elefante"
+```
+
+```
+## [[1]]
+## [1] "perro"
+## 
+## [[2]]
+## [1] "gato"
+## 
+## [[3]]
+## [1] "elefante"
 ```
 --
 
@@ -879,13 +1052,20 @@ background-position: 100% 0%
 
 
 .center[
-<img src="imagenes/walk.jpg" width="350" />
+&lt;img src="imagenes/walk.jpg" width="350" /&gt;
 ]
 
 --
 
-```{r}
+
+```r
 walk(animales, print)
+```
+
+```
+## [1] "perro"
+## [1] "gato"
+## [1] "elefante"
 ```
 
 ### Ahora solo estamos imprimiendo los strings
@@ -899,20 +1079,19 @@ background-position: 100% 0%
 
 ### Necesito escribir archivos  
 
-```{r, echo=F}
-library(gapminder)
+
+
+
+
+```r
+continentes &lt;- split(gapminder, gapminder$continent)
 ```
 
 
-```{r}
-continentes <- split(gapminder, gapminder$continent)
-```
-
-```{r}
+```r
 library(feather)
-files <- paste0("data/", names(continentes), ".feather")
+files &lt;- paste0("data/", names(continentes), ".feather")
 walk2(continentes, files, write_feather)
-
 ```
 
 ---
@@ -927,21 +1106,43 @@ A veces, es útil iterar sobre los nombres de una lista
 --
 
 Extraer nombres de archivos y construir etiquetas
-```{r}
-files <- list.files("data/datos_ene/", full.names = T)
-trimestres <- list.files("data/datos_ene/") %>% 
-  str_extract(pattern = "-[[:digit:]]{2}-") %>% 
+
+```r
+files &lt;- list.files("data/datos_ene/", full.names = T)
+trimestres &lt;- list.files("data/datos_ene/") %&gt;% 
+  str_extract(pattern = "-[[:digit:]]{2}-") %&gt;% 
   str_remove_all("-")
 ```
 
 --
 
 Leer archivos y etiquetar
-```{r}
-varios_ene <-  map(files, read_csv2 )
-names(varios_ene) <-  paste0("trimestre_", trimestres)  
-nombres_lista <-  imap(varios_ene, ~.y)
+
+```r
+varios_ene &lt;-  map(files, read_csv2 )
+names(varios_ene) &lt;-  paste0("trimestre_", trimestres)  
+nombres_lista &lt;-  imap(varios_ene, ~.y)
 nombres_lista
+```
+
+```
+## $trimestre_01
+## [1] "trimestre_01"
+## 
+## $trimestre_02
+## [1] "trimestre_02"
+## 
+## $trimestre_03
+## [1] "trimestre_03"
+## 
+## $trimestre_04
+## [1] "trimestre_04"
+## 
+## $trimestre_05
+## [1] "trimestre_05"
+## 
+## $trimestre_06
+## [1] "trimestre_06"
 ```
 
 
@@ -954,22 +1155,29 @@ background-position: 100% 0%
 
 Creamos una variable con el nombre de cada elemento
 
-```{r, error=T}
-ocupados <- imap(varios_ene, .f = ~mutate(., .y = if_else(activ == 1, 1, 0) ))
-ocupados[[1]] %>% count(trimestre_01)
 
+```r
+ocupados &lt;- imap(varios_ene, .f = ~mutate(., .y = if_else(activ == 1, 1, 0) ))
+ocupados[[1]] %&gt;% count(trimestre_01)
+```
+
+```
+## Error in `count()`:
+## ! Must group by variables found in `.data`.
+## ✖ Column `trimestre_01` is not found.
 ```
 
 ### ¿Qué podemos hacer para arreglar el problema?
 
 .center[
-<img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" />
+&lt;img src="https://media.giphy.com/media/xUPGcz2H1TXdCz4suY/giphy.gif" width="150" /&gt;
 ]
 
 --
 
-```{r}
-ocupados <- imap(varios_ene, .f = ~mutate(., !!rlang::parse_expr(.y)  := if_else(activ == 1, 1, 0) ))
+
+```r
+ocupados &lt;- imap(varios_ene, .f = ~mutate(., !!rlang::parse_expr(.y)  := if_else(activ == 1, 1, 0) ))
 ```
 
 
@@ -986,9 +1194,9 @@ background-position: 100% 0%
 
 Tenemos un listado de `dataframes` separados por año  
 
-```{r}
-gapminder_list <- split(gapminder, gapminder$year)
 
+```r
+gapminder_list &lt;- split(gapminder, gapminder$year)
 ```
 Retomemos nuestras funciones `sum_something` y `plot_table`. 
 
@@ -996,19 +1204,20 @@ La idea es usar `purrr` con el listado que tenemos y generar un gráfico para ca
 
 --
 
-```{r}
-plots_by_year <- gapminder_list %>% 
-  map(~sum_something(.x, continent, pop)) %>% 
+
+```r
+plots_by_year &lt;- gapminder_list %&gt;% 
+  map(~sum_something(.x, continent, pop)) %&gt;% 
   map(~plot_table(.x, continent, n, "Población mundial, según continente" ))
 ```
 
 --
 
-```{r}
-plots_by_year <- gapminder_list %>% 
-  map(sum_something, continent, pop) %>% 
-  map(plot_table, continent, n, "Población mundial, según continente" )
 
+```r
+plots_by_year &lt;- gapminder_list %&gt;% 
+  map(sum_something, continent, pop) %&gt;% 
+  map(plot_table, continent, n, "Población mundial, según continente" )
 ```
 
 
@@ -1044,23 +1253,24 @@ background-position: 100% 0%
 # Tarea para la 🏠 (continuación ejercicio 1)
 
 
-```{r, eval=F}
-gapminder_list <- split(gapminder, gapminder$year)
-plot_with_for <- function(tablas){
-  plots <- list(vector(length = length(tablas) ))
-  i <- 1
+
+```r
+gapminder_list &lt;- split(gapminder, gapminder$year)
+plot_with_for &lt;- function(tablas){
+  plots &lt;- list(vector(length = length(tablas) ))
+  i &lt;- 1
   for (plot in tablas) {
-    table <- sum_something(plot, continent, pop)
-    plots[[i]] <- plot_table(table, continent, n, paste("Población mundial, según continente. Año", plot$year[1] )  )
-    i <-  i + 1
+    table &lt;- sum_something(plot, continent, pop)
+    plots[[i]] &lt;- plot_table(table, continent, n, paste("Población mundial, según continente. Año", plot$year[1] )  )
+    i &lt;-  i + 1
   }
   return(plots)
 }
-
 ```
 
-```{r, eval=F}
-plots <- plot_with_for(gapminder_list)
+
+```r
+plots &lt;- plot_with_for(gapminder_list)
 ```
 
 
@@ -1095,8 +1305,9 @@ El siguiente *for* anidado genera pares de *x* e *y*. El ejercicio consiste en e
 Es posible que la sintaxis llegue a ser un poco confusa. Reflexiona sobre la pertinencia de `purrr` para tareas de este tipo.  
 
 
-```{r, eval=F}
-nested_for <- function(v1, v2) {
+
+```r
+nested_for &lt;- function(v1, v2) {
   for (x in v1) {
     for (y in v2){
       print(paste(x, y))
@@ -1134,10 +1345,147 @@ class: center, middle
 .linea-superior[]
 .linea-inferior[]
 
-<img src="imagenes/logo_portada2.png" width="200" />
+&lt;img src="imagenes/logo_portada2.png" width="200" /&gt;
 
 ## Capacitación en R y herramientas de productividad - nivel intermedio
 
 ## Proyecto Estratégico Metodologías y Ciencia de Datos para la Producción Estadística
 
 ### Julio 2023
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "13:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
