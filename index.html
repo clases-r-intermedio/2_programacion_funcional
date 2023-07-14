@@ -4,8 +4,8 @@
     <title>Capacitación paquete calidad</title>
     <meta charset="utf-8" />
     <meta name="author" content="" />
-    <meta name="date" content="2022-12-07" />
-    <script src="purrr_files/header-attrs-2.16/header-attrs.js"></script>
+    <meta name="date" content="2023-07-14" />
+    <script src="purrr_files/header-attrs-2.21/header-attrs.js"></script>
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
   <body>
@@ -23,7 +23,7 @@ class: center, middle
 
 ## Proyecto Estratégico Metodologías y Ciencia de Datos para la Producción Estadística
 
-### Diciembre 2022
+### Julio 2023
 
 
 
@@ -87,8 +87,8 @@ calcular_cosas(gapminder, pop)
 
 ```
 ## Error in `summarise()`:
-## ! Problem while computing `min = min(var)`.
-## Caused by error in `mask$eval_all_summarise()`:
+## ℹ In argument: `min = min(var)`.
+## Caused by error:
 ## ! object 'pop' not found
 ```
 
@@ -301,7 +301,7 @@ background-position: 100% 0%
 # Expresiones
 
 .pull-left[
-### ¿Qué significa esto `min(!!enquo_var)` ?
+### ¿Qué significa esto `min(!!enquo_var)`?
 ]
 
 .pull-right[
@@ -613,7 +613,7 @@ randomise(mean)
 ```
 
 ```
-## [1] 0.4659979
+## [1] 0.5713121
 ```
 
 ```r
@@ -621,7 +621,7 @@ randomise(sum)
 ```
 
 ```
-## [1] 5.308851
+## [1] 5.811784
 ```
 
 ```r
@@ -629,7 +629,7 @@ randomise(median)
 ```
 
 ```
-## [1] 0.4216911
+## [1] 0.4852749
 ```
 
 
@@ -760,7 +760,10 @@ map_int(1:3, triple_chr)
 ```
 
 ```
-## Error: Can't coerce element 1 from a character to a integer
+## Error in `map_int()`:
+## ℹ In index: 1.
+## Caused by error:
+## ! Can't coerce from a string to an integer vector.
 ```
 
 ```r
@@ -912,6 +915,56 @@ map2_dbl(lista_vectores, valores, media_sumar)
 &lt;img src="https://d33wubrfki0l68.cloudfront.net/f5cddf51ec9c243a7c13732b0ce46b0868bf8a31/501a8/diagrams/functionals/map2.png" width="300" /&gt;
 ]
 
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Ejercicio map2
+
+Tenemos una lista muy larga de elementos con nombres inscritos en el registro civil
+
+
+```r
+lista_anios &lt;- split(guaguas::guaguas, ~anio )
+names(lista_anios)[1:5]
+```
+
+```
+## [1] "1920" "1921" "1922" "1923" "1924"
+```
+Vamos a imaginar que cada elemento ocupa mucha memoria, por lo que deben ser procesados en secuencia
+
+--
+
+La idea es calcular la suma de nombres (variable n) para cada año, filtrando por una variable que puede ser hombre o mujer
+
+
+```r
+filtro &lt;-  map_chr(1:length(lista_anios), ~sample(x = c("F", "M"), size = 1))
+filtro[1:5]
+```
+
+```
+## [1] "F" "M" "F" "M" "M"
+```
+
+
+---
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Resultado ejercicio map2
+
+
+
+```r
+totales &lt;- map2(lista_anios, filtro,  ~.x %&gt;% 
+      dplyr::filter(sexo == .y) %&gt;% 
+      dplyr::summarise(total = sum(n) )
+      )
+```
 
 
 ---
@@ -1109,7 +1162,7 @@ ocupados[[1]] %&gt;% count(trimestre_01)
 ```
 
 ```
-## Error in `group_by()`:
+## Error in `count()`:
 ## ! Must group by variables found in `.data`.
 ## ✖ Column `trimestre_01` is not found.
 ```
@@ -1298,7 +1351,7 @@ class: center, middle
 
 ## Proyecto Estratégico Metodologías y Ciencia de Datos para la Producción Estadística
 
-### Diciembre 2022
+### Julio 2023
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
