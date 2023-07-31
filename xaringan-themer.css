@@ -331,6 +331,11 @@ table,  td {
   padding: 1px;
 }
 
+/* Scroller para lámina */
+.remark-slide-scaler {
+    overflow-y: auto;
+}
+
 
 /*
 

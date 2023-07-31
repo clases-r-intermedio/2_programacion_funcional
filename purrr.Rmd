@@ -39,6 +39,7 @@ options(scipen = "999")
 library(xaringanthemer)
 library(tidyverse)
 library(feather)
+xaringanExtra::use_clipboard()
 ```
 
 ---
