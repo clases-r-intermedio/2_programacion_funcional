@@ -4,8 +4,8 @@
     <title>Capacitación paquete calidad</title>
     <meta charset="utf-8" />
     <meta name="author" content="" />
-    <meta name="date" content="2024-11-27" />
-    <script src="purrr_files/header-attrs-2.28/header-attrs.js"></script>
+    <meta name="date" content="2023-07-31" />
+    <script src="purrr_files/header-attrs-2.23/header-attrs.js"></script>
     <script src="purrr_files/clipboard-2.0.6/clipboard.min.js"></script>
     <link href="purrr_files/xaringanExtra-clipboard-0.2.6/xaringanExtra-clipboard.css" rel="stylesheet" />
     <script src="purrr_files/xaringanExtra-clipboard-0.2.6/xaringanExtra-clipboard.js"></script>
@@ -74,7 +74,7 @@ background-position: 100% 0%
 ### Queremos una función que calcule mínimo, máximo, media y mediana en un `dataframe` 
 
 
-``` r
+```r
 library(gapminder)
 library(tidyverse)
 calcular_cosas &lt;- function(data, var) {
@@ -93,7 +93,7 @@ calcular_cosas(gapminder, pop)
 ## Error in `summarise()`:
 ## ℹ In argument: `min = min(var)`.
 ## Caused by error:
-## ! objeto 'pop' no encontrado
+## ! object 'pop' not found
 ```
 
 
@@ -114,7 +114,7 @@ background-position: 100% 0%
 
 
 
-``` r
+```r
 library(rlang)
 calcular_cosas &lt;- function(data, var) {
 * enquo_var &lt;- enexpr(var)
@@ -158,12 +158,12 @@ background-position: 100% 0%
 ### Para saber si un argumento es quoted o evaluado, simplemente ejecutamos el argumento fuera de la función
 
 
-``` r
+```r
 pop
 ```
 
 ```
-## Error: objeto 'pop' no encontrado
+## Error in eval(expr, envir, enclos): object 'pop' not found
 ```
 --
 
@@ -180,7 +180,7 @@ background-position: 100% 0%
 ### Argumentos evaluados
 
 
-``` r
+```r
 sum(mtcars$am)
 class(mtcars)
 ```
@@ -190,7 +190,7 @@ class(mtcars)
 ### Argumentos quoted
 
 
-``` r
+```r
 library(dplyr)
 
 by_cyl &lt;- mtcars %&gt;%
@@ -209,7 +209,7 @@ background-position: 100% 0%
 ### Evaluar de manera no estándar consiste en atrapar expresiones y evaluarlas en otro momento
 
 
-``` r
+```r
 expr(x + y)
 ```
 
@@ -223,7 +223,7 @@ expr(x + y)
 --
 
 
-``` r
+```r
 devolver_expresion &lt;- function(x) {
   expr(x)}
 devolver_expresion(a + b)
@@ -235,7 +235,7 @@ devolver_expresion(a + b)
 ### La función `expr` es demasiado literal. Podemos usar enexpr (enrich) 
 
 
-``` r
+```r
 devolver_expresion &lt;- function(x) {
   enexpr(x)
 }
@@ -259,7 +259,7 @@ background-position: 100% 0%
 ### Volviendo a nuestra función `calcular_cosas`...
  
 
-``` r
+```r
 calcular_cosas &lt;- function(data, var) {
 * enquo_var &lt;- enexpr(var)
 
@@ -281,7 +281,7 @@ calcular_cosas &lt;- function(data, var) {
 
 
 
-``` r
+```r
 calcular_cosas &lt;- function(data, var) {
   enquo_var &lt;- enexpr(var) 
   return(enquo_var)
@@ -322,7 +322,7 @@ background-position: 100% 0%
 --
 
 
-``` r
+```r
 calcular_cosas &lt;- function(data, var) {
   enquo_var &lt;- enexpr(var) 
 
@@ -354,7 +354,7 @@ background-position: 100% 0%
 ### Idea número 1
 
 
-``` r
+```r
 calcular_cosas &lt;- function(data, var) {
   enquo_var &lt;- enexpr(var) 
 
@@ -386,7 +386,7 @@ background-position: 100% 0%
 ### Idea número 2: evaluar *enquo_var* 
 
 
-``` r
+```r
 calcular_cosas &lt;- function(data, var) {
   enquo_var &lt;- enexpr(var) 
 
@@ -397,7 +397,7 @@ calcular_cosas(gapminder, pop)
 ```
 
 ```
-## Error in parse(text = input): &lt;text&gt;:5:27: inesperado '='
+## Error: &lt;text&gt;:5:27: unexpected '='
 ## 4:   data %&gt;% 
 ## 5:     summarise(!!enquo_var =
 ##                              ^
@@ -414,7 +414,7 @@ background-position: 100% 0%
 ### Debemos resolver el problema con un nuevo operador
 
 
-``` r
+```r
 calcular_cosas &lt;- function(data, var) {
   enquo_var &lt;- enexpr(var) 
   data %&gt;% 
@@ -435,7 +435,7 @@ Si queremos entregar un string como input podemos usar `sym`
 `sym` convierte un string en un símbolo. Esta operación se denomina *parsing*
 
 
-``` r
+```r
 calcular_cosas &lt;- function(data, var) {
   enquo_var &lt;- sym(var)
   data %&gt;% 
@@ -462,7 +462,7 @@ background-position: 100% 0%
 ### Otra opción es usar la función `parse_expr` de `rlang`
 
 
-``` r
+```r
 calcular_cosas &lt;- function(data, var) {
 * enquo_var &lt;- parse_expr(var)
   data %&gt;% 
@@ -487,7 +487,7 @@ background-position: 100% 0%
 ### Hace un tiempo existe el operador embrace `{{}}`
 
 
-``` r
+```r
 calcular_cosas &lt;- function(data, var) {
   data %&gt;% 
 *   summarise({{var}} := min({{var}}))
@@ -535,7 +535,7 @@ Trabajaremos con los datos de Casen. Escriba una función llamada `sum_something
 --
 
 
-``` r
+```r
 sum_something &lt;- function(data, group_var, var) {
   data %&gt;% 
     group_by(!!enexpr(group_var)) %&gt;% 
@@ -564,7 +564,7 @@ Crea una función `plot_table` que acompañe a `sum_something`. `plot_table` deb
 .pull-right[
 
 
-``` r
+```r
 tabla &lt;- sum_something(casen, region, ytotcor)
 plot_table &lt;- function(table, x_var, y_var,  input_title ) {
   ggplot(table, aes(x = !!enexpr(x_var), y = !!enexpr(y_var) )) +
@@ -604,7 +604,7 @@ background-position: 100% 0%
 Una "funcional" (*functional*) es una función que recibe como input otra función
 
 
-``` r
+```r
 randomise &lt;- function(f) f(runif(10))
 ```
 --
@@ -612,28 +612,40 @@ randomise &lt;- function(f) f(runif(10))
 `randomise` recibe una función y hace algo con un vector de 10 números aleatorios
 
 
-``` r
+```r
 randomise(mean)
 ```
 
 ```
+<<<<<<< HEAD:purrr.html
 ## [1] 0.3904058
+=======
+## [1] 0.6683953
+>>>>>>> 8980d4437027bd20bbd9cefa84a1eb252f06c970:index_old.html
 ```
 
-``` r
+```r
 randomise(sum)
 ```
 
 ```
+<<<<<<< HEAD:purrr.html
 ## [1] 4.823743
+=======
+## [1] 4.34142
+>>>>>>> 8980d4437027bd20bbd9cefa84a1eb252f06c970:index_old.html
 ```
 
-``` r
+```r
 randomise(median)
 ```
 
 ```
+<<<<<<< HEAD:purrr.html
 ## [1] 0.5729363
+=======
+## [1] 0.5323509
+>>>>>>> 8980d4437027bd20bbd9cefa84a1eb252f06c970:index_old.html
 ```
 
 
@@ -665,7 +677,7 @@ Típicamente, las funcionales se usan como alternativa a los *loops*
 Nosotros trabajaremos con el paquete `purrr`
 
 
-``` r
+```r
 library(purrr)
 ```
 
@@ -686,7 +698,7 @@ background-position: 100% 0%
 Función que calcula el cuadrado del input
 
 
-``` r
+```r
 cuadrado &lt;- function(x) x ** 2
 ```
 
@@ -695,7 +707,7 @@ cuadrado &lt;- function(x) x ** 2
 `map` lleva el vector `1:3` hacia la función cuadrado
 
 
-``` r
+```r
 map(1:3, cuadrado)
 ```
 
@@ -758,7 +770,7 @@ Tenemos claridad de lo que entra y sale de la función
  
 
 
-``` r
+```r
 triple_chr &lt;- function(x) as.character(x * 3)
 map_int(1:3, triple_chr)
 ```
@@ -767,10 +779,10 @@ map_int(1:3, triple_chr)
 ## Error in `map_int()`:
 ## ℹ In index: 1.
 ## Caused by error:
-## ! Can't coerce from a string to an integer.
+## ! Can't coerce from a string to an integer vector.
 ```
 
-``` r
+```r
 map_chr(1:3, triple_chr)
 ```
 
@@ -790,7 +802,7 @@ background-position: 100% 0%
 ### La función `mean` se evalúa en cada uno de los vectores de la lista
 
 
-``` r
+```r
 lista_vectores &lt;- list(1:3, 1:10, 2:9, 1)
 map_dbl(lista_vectores, mean)
 ```
@@ -819,7 +831,7 @@ background-position: 100% 0%
 ### En `R`, los `dataframes` son listas con vectores de la misma longitud
 
 
-``` r
+```r
 typeof(mtcars)
 ```
 
@@ -829,7 +841,7 @@ typeof(mtcars)
 --
 
 
-``` r
+```r
 map_dbl(mtcars, mean)
 ```
 
@@ -858,7 +870,7 @@ background-position: 100% 0%
 ### ¿Qué pasa si queremos usar más argumentos?
 
 
-``` r
+```r
 lista_vectores &lt;- list(1:3, c(1:10, NA))
 map_dbl(lista_vectores, ~mean(.x, na.rm = TRUE))
 ```
@@ -890,7 +902,7 @@ background-position: 100% 0%
 ### La función `media_sumar` calcula la media y suma un valor
 
 
-``` r
+```r
 media_sumar &lt;- function(vector, valor) {
   mean(vector) + valor
 }
@@ -899,7 +911,7 @@ media_sumar &lt;- function(vector, valor) {
 ### Queremos que la función itere sobre `lista_vectores` y sobre `valores`
 
 
-``` r
+```r
 lista_vectores &lt;- list(1:3, 1:5, 2:5)
 valores &lt;- c(2, 3, 8)
 ```
@@ -907,7 +919,7 @@ valores &lt;- c(2, 3, 8)
 --
 
 
-``` r
+```r
 map2_dbl(lista_vectores, valores, media_sumar)
 ```
 
@@ -929,7 +941,7 @@ background-position: 100% 0%
 Tenemos una lista muy larga de elementos con nombres inscritos en el registro civil
 
 
-``` r
+```r
 lista_anios &lt;- split(guaguas::guaguas, ~anio )
 names(lista_anios)[1:5]
 ```
@@ -944,13 +956,17 @@ Vamos a imaginar que cada elemento ocupa mucha memoria, por lo que deben ser pro
 La idea es calcular la suma de nombres (variable n) para cada año, filtrando por una variable que puede ser hombre o mujer
 
 
-``` r
+```r
 filtro &lt;-  map_chr(1:length(lista_anios), ~sample(x = c("F", "M"), size = 1))
 filtro[1:5]
 ```
 
 ```
+<<<<<<< HEAD:purrr.html
 ## [1] "M" "F" "M" "M" "F"
+=======
+## [1] "M" "M" "M" "M" "M"
+>>>>>>> 8980d4437027bd20bbd9cefa84a1eb252f06c970:index_old.html
 ```
 
 
@@ -963,7 +979,7 @@ background-position: 100% 0%
 
 
 
-``` r
+```r
 totales &lt;- map2(lista_anios, filtro,  ~.x %&gt;% 
       dplyr::filter(sexo == .y) %&gt;% 
       dplyr::summarise(total = sum(n) )
@@ -982,7 +998,7 @@ background-position: 100% 0%
 ### Necesitamos iterar sobre 3 vectores
 
 
-``` r
+```r
 media_sumar_dividir &lt;- function(vector, valor_suma, valor_division) {
   (mean(vector) + valor_suma) / valor_division
 }
@@ -995,7 +1011,7 @@ valores_division &lt;- c(2, 1, 9)
 --
 
 
-``` r
+```r
 pmap_dbl(list(lista_vectores, valores_suma, valores_division), media_sumar_dividir)
 ```
 
@@ -1021,7 +1037,7 @@ background-position: 100% 0%
 ### A veces, nos interesa una función por sus *side-effects*
 
 
-``` r
+```r
 animales &lt;- c("perro", "gato", "elefante")
 map(animales, print)
 ```
@@ -1062,7 +1078,7 @@ background-position: 100% 0%
 --
 
 
-``` r
+```r
 walk(animales, print)
 ```
 
@@ -1087,12 +1103,12 @@ background-position: 100% 0%
 
 
 
-``` r
+```r
 continentes &lt;- split(gapminder, gapminder$continent)
 ```
 
 
-``` r
+```r
 library(feather)
 files &lt;- paste0("data/", names(continentes), ".feather")
 walk2(continentes, files, write_feather)
@@ -1111,7 +1127,7 @@ A veces, es útil iterar sobre los nombres de una lista
 
 Extraer nombres de archivos y construir etiquetas
 
-``` r
+```r
 files &lt;- list.files("data/datos_ene/", full.names = T)
 trimestres &lt;- list.files("data/datos_ene/") %&gt;% 
   str_extract(pattern = "-[[:digit:]]{2}-") %&gt;% 
@@ -1122,7 +1138,7 @@ trimestres &lt;- list.files("data/datos_ene/") %&gt;%
 
 Leer archivos y etiquetar
 
-``` r
+```r
 varios_ene &lt;-  map(files, read_csv2 )
 names(varios_ene) &lt;-  paste0("trimestre_", trimestres)  
 nombres_lista &lt;-  imap(varios_ene, ~.y)
@@ -1160,7 +1176,7 @@ background-position: 100% 0%
 Creamos una variable con el nombre de cada elemento
 
 
-``` r
+```r
 ocupados &lt;- imap(varios_ene, .f = ~mutate(., .y = if_else(activ == 1, 1, 0) ))
 ocupados[[1]] %&gt;% count(trimestre_01)
 ```
@@ -1180,7 +1196,7 @@ ocupados[[1]] %&gt;% count(trimestre_01)
 --
 
 
-``` r
+```r
 ocupados &lt;- imap(varios_ene, .f = ~mutate(., !!rlang::parse_expr(.y)  := if_else(activ == 1, 1, 0) ))
 ```
 
@@ -1199,7 +1215,7 @@ background-position: 100% 0%
 Tenemos un listado de `dataframes` separados por año  
 
 
-``` r
+```r
 gapminder_list &lt;- split(gapminder, gapminder$year)
 ```
 Retomemos nuestras funciones `sum_something` y `plot_table`. 
@@ -1209,7 +1225,7 @@ La idea es usar `purrr` con el listado que tenemos y generar un gráfico para ca
 --
 
 
-``` r
+```r
 plots_by_year &lt;- gapminder_list %&gt;% 
   map(~sum_something(.x, continent, pop)) %&gt;% 
   map(~plot_table(.x, continent, n, "Población mundial, según continente" ))
@@ -1218,7 +1234,7 @@ plots_by_year &lt;- gapminder_list %&gt;%
 --
 
 
-``` r
+```r
 plots_by_year &lt;- gapminder_list %&gt;% 
   map(sum_something, continent, pop) %&gt;% 
   map(plot_table, continent, n, "Población mundial, según continente" )
@@ -1235,6 +1251,8 @@ background-size: contain;
 background-position: 100% 0%
 
 # Tarea para la 🏠
+
+Las tareas deberán ser entregadas a través de git. En el repositorio de github que hemos estado usando existe una rama llamada tareas, en la cual hay una carpeta para cada clase. Hagan *fetch* (o *pull*) de esa rama y empujen sus tareas a la carpeta correspondiente. La estructura del archivo debe ser la siguiente: nombre_apellido1_apellido2.R
 
 **Nota: Es deseable que las tareas solo contengan funciones**
 
@@ -1254,7 +1272,7 @@ background-position: 100% 0%
 
 
 
-``` r
+```r
 gapminder_list &lt;- split(gapminder, gapminder$year)
 plot_with_for &lt;- function(tablas){
   plots &lt;- list(vector(length = length(tablas) ))
@@ -1269,7 +1287,7 @@ plot_with_for &lt;- function(tablas){
 ```
 
 
-``` r
+```r
 plots &lt;- plot_with_for(gapminder_list)
 ```
 
@@ -1306,7 +1324,7 @@ Es posible que la sintaxis llegue a ser un poco confusa. Reflexiona sobre la per
 
 
 
-``` r
+```r
 nested_for &lt;- function(v1, v2) {
   for (x in v1) {
     for (y in v2){
@@ -1319,6 +1337,30 @@ nested_for(1:3, 5:8)
 ```
 
 ---
+<<<<<<< HEAD:purrr.html
+=======
+background-image: url("imagenes/fondo2.PNG")
+background-size: contain;
+background-position: 100% 0%
+
+# Tarea para la 🏠 (Bonus)
+
+Si quieres practicar más, puedes realizar el siguiente ejercicio. No es parte de la evaluación, pero te puede dar puntos extras en caso de que no obtengas todo el puntaje en alguno de los ejercicios anteriores.    
+
+Con los datos de la ENE y **siempre utilizando purrr**, realiza las siguientes tareas:
+
+- Carga todos los trimestres de 2022 en una lista
+- Escribe una función llamada get_employment_sample que reciba un dataframe y devuelva la cantidad de ocupados sin expandir. La categoría 1 de la variable *activ* muestra a los ocupados.    
+- Usando get_employment_sample, genera un gráfico que muestre la cantidad de ocupados y no ocupados para cada uno de los trimestres.
+- Guarda cada uno de los gráficos en una carpeta de tu computador en formato jpg o pdf.  
+- Abre un rmd y carga todos los gráficos guardados (usando purrr)
+- Genera un pdf o html que tenga en su interior los gráficos
+
+Para los últimos 2 pasos, deberás empujar al repositorio, además, el archivo rmd
+
+---
+
+>>>>>>> 8980d4437027bd20bbd9cefa84a1eb252f06c970:index_old.html
 class: center, middle
 
 .linea-superior[]
